@@ -1,0 +1,411 @@
+"use client";
+
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
+import { deleteProduct, saveProduct } from "@/app/admin/actions";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
+import type { CategorySlug, Product } from "@/lib/types";
+
+const CATEGORIES: { slug: CategorySlug; name: string }[] = [
+  { slug: "cookware", name: "Cookware" },
+  { slug: "dinnerware", name: "Dinnerware" },
+  { slug: "cutlery", name: "Cutlery & Tools" },
+  { slug: "serveware", name: "Serveware & Glassware" },
+  { slug: "storage", name: "Storage & Organisation" },
+  { slug: "small-appliances", name: "Small Appliances" },
+];
+
+function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+interface SpecRow {
+  key: string;
+  value: string;
+}
+
+export function ProductEditor({ product }: { product?: Product }) {
+  const router = useRouter();
+  const isEdit = Boolean(product);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [name, setName] = useState(product?.name ?? "");
+  const [slug, setSlug] = useState(product?.slug ?? "");
+  const [slugTouched, setSlugTouched] = useState(isEdit);
+  const [categorySlug, setCategorySlug] = useState<CategorySlug>(
+    product?.categorySlug ?? "cookware",
+  );
+  const [priceRwf, setPriceRwf] = useState(String(product?.priceRwf ?? ""));
+  const [shortDescription, setShortDescription] = useState(
+    product?.shortDescription ?? "",
+  );
+  const [description, setDescription] = useState(product?.description ?? "");
+  const [images, setImages] = useState<string[]>(product?.images ?? []);
+  const [specs, setSpecs] = useState<SpecRow[]>(
+    product?.specs && Object.keys(product.specs).length > 0
+      ? Object.entries(product.specs).map(([key, value]) => ({ key, value }))
+      : [{ key: "", value: "" }],
+  );
+  const [featured, setFeatured] = useState(product?.featured ?? false);
+  const [inStock, setInStock] = useState(product?.inStock ?? true);
+
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleNameChange(value: string) {
+    setName(value);
+    if (!slugTouched) setSlug(slugify(value));
+  }
+
+  async function handleFiles(files: FileList | null) {
+    if (!files || files.length === 0) return;
+    setUploading(true);
+    setError(null);
+    const supabase = createSupabaseBrowserClient();
+    const uploaded: string[] = [];
+
+    for (const file of Array.from(files)) {
+      const ext = file.name.split(".").pop() ?? "jpg";
+      const path = `${slug || slugify(name) || "product"}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("product-images")
+        .upload(path, file, { cacheControl: "31536000", upsert: false });
+      if (uploadError) {
+        setError(`Upload failed: ${uploadError.message}`);
+        continue;
+      }
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      uploaded.push(data.publicUrl);
+    }
+
+    setImages((prev) => [...prev, ...uploaded].slice(0, 8));
+    setUploading(false);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeImage(url: string) {
+    setImages((prev) => prev.filter((image) => image !== url));
+  }
+
+  function updateSpec(index: number, field: keyof SpecRow, value: string) {
+    setSpecs((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
+    );
+  }
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setSaving(true);
+
+    const specObject: Record<string, string> = {};
+    for (const row of specs) {
+      const key = row.key.trim();
+      const value = row.value.trim();
+      if (key && value) specObject[key] = value;
+    }
+
+    const result = await saveProduct({
+      id: product?.id,
+      name: name.trim(),
+      slug: slug.trim(),
+      categorySlug,
+      priceRwf: Number(priceRwf),
+      shortDescription: shortDescription.trim(),
+      description: description.trim(),
+      images,
+      specs: specObject,
+      featured,
+      inStock,
+    });
+
+    if (!result.ok) {
+      setError(result.error);
+      setSaving(false);
+      return;
+    }
+    router.push("/admin/products");
+    router.refresh();
+  }
+
+  async function handleDelete() {
+    if (!product) return;
+    if (!window.confirm(`Delete "${product.name}"? This can't be undone.`)) return;
+    setDeleting(true);
+    const result = await deleteProduct(product.id);
+    if (!result.ok) {
+      setError(result.error);
+      setDeleting(false);
+      return;
+    }
+    router.push("/admin/products");
+    router.refresh();
+  }
+
+  const fieldClass =
+    "mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink placeholder:text-ink-faint";
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-display text-2xl font-bold tracking-[-0.02em]">
+          {isEdit ? "Edit product" : "New product"}
+        </h1>
+        {isEdit && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong px-4 py-2 text-sm font-medium text-ink-soft transition-colors duration-200 hover:border-copper-deep hover:text-copper-deep disabled:opacity-60"
+          >
+            <IconTrash className="h-4 w-4" />
+            {deleting ? "Deleting…" : "Delete"}
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+        <div className="space-y-5">
+          {/* Images */}
+          <div className="rounded-2xl border border-line bg-surface p-5">
+            <span className="text-sm font-medium text-ink">Images</span>
+            <div className="mt-3 flex flex-wrap gap-3">
+              {images.map((url, index) => (
+                <div
+                  key={url}
+                  className="group relative h-24 w-24 overflow-hidden rounded-xl border border-line bg-cream"
+                >
+                  <Image src={url} alt="" fill sizes="96px" className="object-cover" />
+                  {index === 0 && (
+                    <span className="absolute left-1 top-1 rounded bg-ink/70 px-1.5 py-0.5 text-[0.6rem] font-semibold text-porcelain">
+                      Main
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(url)}
+                    aria-label="Remove image"
+                    className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-ink/70 text-porcelain opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                  >
+                    <IconClose className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              {images.length < 8 && (
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
+                  className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line-strong text-ink-faint transition-colors duration-200 hover:border-copper hover:text-copper disabled:opacity-60"
+                >
+                  <IconPlus className="h-5 w-5" />
+                  <span className="text-[0.65rem]">{uploading ? "Uploading…" : "Add"}</span>
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={(event) => handleFiles(event.target.files)}
+              className="hidden"
+            />
+            <p className="mt-3 text-xs text-ink-faint">
+              First image is the main photo. Up to 8, uploaded to Supabase Storage.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="name" className="text-sm font-medium text-ink">
+              Product name
+            </label>
+            <input
+              id="name"
+              type="text"
+              required
+              value={name}
+              onChange={(event) => handleNameChange(event.target.value)}
+              className={fieldClass}
+              placeholder="e.g. Ember Enamelled Dutch Oven — 5.2 L"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="slug" className="text-sm font-medium text-ink">
+              URL slug
+            </label>
+            <input
+              id="slug"
+              type="text"
+              required
+              value={slug}
+              onChange={(event) => {
+                setSlugTouched(true);
+                setSlug(slugify(event.target.value));
+              }}
+              className={`${fieldClass} font-mono text-sm`}
+              placeholder="ember-enamelled-dutch-oven"
+            />
+            <p className="mt-1 text-xs text-ink-faint">
+              Lives at /product/{slug || "…"}
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="short" className="text-sm font-medium text-ink">
+              Short description
+            </label>
+            <textarea
+              id="short"
+              required
+              rows={2}
+              value={shortDescription}
+              onChange={(event) => setShortDescription(event.target.value)}
+              className={`${fieldClass} resize-none`}
+              placeholder="One punchy line shown on product cards."
+            />
+          </div>
+
+          <div>
+            <label htmlFor="description" className="text-sm font-medium text-ink">
+              Full description
+            </label>
+            <textarea
+              id="description"
+              required
+              rows={6}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              className={`${fieldClass} resize-y`}
+            />
+          </div>
+
+          {/* Specs */}
+          <div className="rounded-2xl border border-line bg-surface p-5">
+            <span className="text-sm font-medium text-ink">Specifications</span>
+            <div className="mt-3 space-y-2">
+              {specs.map((row, index) => (
+                <div key={index} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={row.key}
+                    onChange={(event) => updateSpec(index, "key", event.target.value)}
+                    placeholder="Label (e.g. Capacity)"
+                    className="w-2/5 rounded-lg border border-line-strong bg-porcelain px-3 py-2 text-sm"
+                  />
+                  <input
+                    type="text"
+                    value={row.value}
+                    onChange={(event) => updateSpec(index, "value", event.target.value)}
+                    placeholder="Value (e.g. 5.2 litres)"
+                    className="flex-1 rounded-lg border border-line-strong bg-porcelain px-3 py-2 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSpecs((prev) => prev.filter((_, i) => i !== index))}
+                    aria-label="Remove specification"
+                    className="cursor-pointer rounded-lg px-2 text-ink-faint transition-colors duration-200 hover:text-copper-deep"
+                  >
+                    <IconClose className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => setSpecs((prev) => [...prev, { key: "", value: "" }])}
+              className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
+            >
+              <IconPlus className="h-4 w-4" />
+              Add specification
+            </button>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-5 lg:sticky lg:top-6 lg:self-start">
+          <div className="space-y-5 rounded-2xl border border-line bg-surface p-5">
+            <div>
+              <label htmlFor="category" className="text-sm font-medium text-ink">
+                Category
+              </label>
+              <select
+                id="category"
+                value={categorySlug}
+                onChange={(event) => setCategorySlug(event.target.value as CategorySlug)}
+                className={`${fieldClass} cursor-pointer`}
+              >
+                {CATEGORIES.map((category) => (
+                  <option key={category.slug} value={category.slug}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="price" className="text-sm font-medium text-ink">
+                Price (RWF)
+              </label>
+              <input
+                id="price"
+                type="number"
+                min={0}
+                step={500}
+                required
+                value={priceRwf}
+                onChange={(event) => setPriceRwf(event.target.value)}
+                className={`${fieldClass} tabular-nums`}
+                placeholder="145000"
+              />
+            </div>
+
+            <label className="flex cursor-pointer items-center justify-between gap-3">
+              <span className="text-sm font-medium text-ink">In stock</span>
+              <input
+                type="checkbox"
+                checked={inStock}
+                onChange={(event) => setInStock(event.target.checked)}
+                className="h-5 w-5 cursor-pointer accent-copper"
+              />
+            </label>
+
+            <label className="flex cursor-pointer items-center justify-between gap-3">
+              <span className="text-sm font-medium text-ink">Featured on homepage</span>
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(event) => setFeatured(event.target.checked)}
+                className="h-5 w-5 cursor-pointer accent-copper"
+              />
+            </label>
+          </div>
+
+          {error && (
+            <p role="alert" className="rounded-xl bg-copper-tint/50 px-4 py-3 text-sm text-copper-deep">
+              {error}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={saving || uploading}
+            className="w-full cursor-pointer rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+          >
+            {saving ? "Saving…" : isEdit ? "Save changes" : "Create product"}
+          </button>
+        </div>
+      </div>
+    </form>
+  );
+}
