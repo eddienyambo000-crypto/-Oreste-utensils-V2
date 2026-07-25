@@ -156,3 +156,15 @@ export async function getFreeDeliveryThreshold(): Promise<number> {
     ? parsed
     : FREE_DELIVERY_THRESHOLD_RWF;
 }
+
+/** Uploaded logo URL, or null to fall back to the text wordmark. */
+export async function getLogoUrl(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data } = await getPublicClient()
+    .from("ou_settings")
+    .select("value")
+    .eq("key", "logo_url")
+    .maybeSingle();
+  const value = data?.value?.trim();
+  return value ? value : null;
+}

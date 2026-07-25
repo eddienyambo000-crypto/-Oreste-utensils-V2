@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -13,7 +14,7 @@ const NAV_LINKS = [
   { href: "/contact", label: "Visit us" },
 ] as const;
 
-export function Header() {
+export function Header({ logoUrl }: { logoUrl?: string | null }) {
   const { count, openCart } = useCart();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -23,15 +24,28 @@ export function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          className="flex items-baseline gap-2"
+          className="flex items-center gap-2"
           aria-label="Oreste Utensils — home"
         >
-          <span className="font-display text-2xl font-bold tracking-tight text-ink">
-            Oreste
-          </span>
-          <span className="hidden text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-copper sm:inline">
-            Utensils
-          </span>
+          {logoUrl ? (
+            <Image
+              src={logoUrl}
+              alt="Oreste Utensils"
+              width={160}
+              height={40}
+              priority
+              className="h-9 w-auto object-contain"
+            />
+          ) : (
+            <>
+              <span className="font-display text-2xl font-bold tracking-tight text-ink">
+                Oreste
+              </span>
+              <span className="hidden text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-copper sm:inline">
+                Utensils
+              </span>
+            </>
+          )}
         </Link>
 
         <nav aria-label="Main navigation" className="hidden md:block">

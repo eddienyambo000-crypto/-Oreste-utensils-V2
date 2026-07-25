@@ -142,3 +142,33 @@ export async function updateFreeDeliveryThreshold(
   revalidatePath("/admin/settings");
   return { ok: true };
 }
+
+const logoUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .url()
+  .startsWith("https://")
+  .nullable();
+
+/** Sets or clears (null) the brand logo shown in the nav and footer. */
+export async function updateLogoUrl(
+  url: string | null,
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const parsed = logoUrlSchema.safeParse(url);
+  if (!parsed.success) {
+    return { ok: false, error: "Invalid logo URL." };
+  }
+  const { error } = await supabase.from("ou_settings").upsert({
+    key: "logo_url",
+    value: parsed.data ?? "",
+  });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}

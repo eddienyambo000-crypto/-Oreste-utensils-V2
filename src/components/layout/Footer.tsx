@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/constants";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -26,18 +27,28 @@ const COMPANY_LINKS = [
   { href: "/cart", label: "Your cart" },
 ] as const;
 
-export function Footer() {
+export function Footer({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <footer className="border-t border-line bg-cream/50">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1.4fr]">
           <div>
-            <p className="font-display text-2xl font-bold tracking-tight">
-              Oreste{" "}
-              <span className="text-[0.6em] font-semibold uppercase tracking-[0.22em] text-copper">
-                Utensils
-              </span>
-            </p>
+            {logoUrl ? (
+              <Image
+                src={logoUrl}
+                alt="Oreste Utensils"
+                width={180}
+                height={44}
+                className="h-10 w-auto object-contain"
+              />
+            ) : (
+              <p className="font-display text-2xl font-bold tracking-tight">
+                Oreste{" "}
+                <span className="text-[0.6em] font-semibold uppercase tracking-[0.22em] text-copper">
+                  Utensils
+                </span>
+              </p>
+            )}
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
               {BUSINESS.description}
             </p>
