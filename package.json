@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start -p 3012",
     "lint": "eslint",
-    "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.mjs"
+    "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.mjs",
+    "seed:supabase": "node --experimental-strip-types scripts/seed-supabase.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
