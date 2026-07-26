@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { Analytics } from "@/components/Analytics";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
 import "./globals.css";
 
@@ -63,6 +64,7 @@ export default function RootLayout({
           }}
         />
         {children}
+        <Analytics />
       </body>
     </html>
   );
