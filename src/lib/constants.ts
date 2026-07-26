@@ -29,8 +29,13 @@ export const BUSINESS = {
   mapsUrl: "https://maps.google.com/?q=City+Plaza,+Kigali,+Rwanda",
 } as const;
 
-export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "https://oresteutensils.com";
+// Trim whitespace and any trailing slash so an env value with stray
+// whitespace can't leak a broken URL into the sitemap, robots.txt or JSON-LD.
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://oresteutensils.com"
+)
+  .trim()
+  .replace(/\/+$/, "");
 
 /** Orders at or above this subtotal get free delivery across Kigali (RWF). */
 export const FREE_DELIVERY_THRESHOLD_RWF = 500_000;
