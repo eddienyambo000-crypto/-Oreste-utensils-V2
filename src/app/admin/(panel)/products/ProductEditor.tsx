@@ -6,16 +6,12 @@ import { useRef, useState } from "react";
 import { deleteProduct, saveProduct } from "@/app/admin/actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
-import type { CategorySlug, Product } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
-const CATEGORIES: { slug: CategorySlug; name: string }[] = [
-  { slug: "cookware", name: "Cookware" },
-  { slug: "dinnerware", name: "Dinnerware" },
-  { slug: "cutlery", name: "Cutlery & Tools" },
-  { slug: "serveware", name: "Serveware & Glassware" },
-  { slug: "storage", name: "Storage & Organisation" },
-  { slug: "small-appliances", name: "Small Appliances" },
-];
+interface CategoryOption {
+  slug: string;
+  name: string;
+}
 
 function slugify(value: string): string {
   return value
@@ -31,7 +27,13 @@ interface SpecRow {
   value: string;
 }
 
-export function ProductEditor({ product }: { product?: Product }) {
+export function ProductEditor({
+  product,
+  categories,
+}: {
+  product?: Product;
+  categories: CategoryOption[];
+}) {
   const router = useRouter();
   const isEdit = Boolean(product);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -39,8 +41,8 @@ export function ProductEditor({ product }: { product?: Product }) {
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(isEdit);
-  const [categorySlug, setCategorySlug] = useState<CategorySlug>(
-    product?.categorySlug ?? "cookware",
+  const [categorySlug, setCategorySlug] = useState<string>(
+    product?.categorySlug ?? categories[0]?.slug ?? "",
   );
   const [priceRwf, setPriceRwf] = useState(String(product?.priceRwf ?? ""));
   const [shortDescription, setShortDescription] = useState(
@@ -342,10 +344,10 @@ export function ProductEditor({ product }: { product?: Product }) {
               <select
                 id="category"
                 value={categorySlug}
-                onChange={(event) => setCategorySlug(event.target.value as CategorySlug)}
+                onChange={(event) => setCategorySlug(event.target.value)}
                 className={`${fieldClass} cursor-pointer`}
               >
-                {CATEGORIES.map((category) => (
+                {categories.map((category) => (
                   <option key={category.slug} value={category.slug}>
                     {category.name}
                   </option>

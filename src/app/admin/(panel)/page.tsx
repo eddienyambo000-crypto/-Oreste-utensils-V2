@@ -2,7 +2,7 @@ import Link from "next/link";
 import { OrderCard } from "./OrderCard";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
 import { fetchOrders } from "@/lib/admin/orders";
-import { formatRwf } from "@/lib/format";
+import { fetchLeads } from "@/lib/admin/leads";
 
 export const dynamic = "force-dynamic";
 
@@ -19,20 +19,21 @@ export default async function AdminOverviewPage() {
       .eq("in_stock", false),
   ]);
 
-  const { count: newOrders } = await supabase
-    .from("ou_orders")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "new");
+  const [{ count: newOrders }, { leads }] = await Promise.all([
+    supabase
+      .from("ou_orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "new"),
+    fetchLeads(supabase),
+  ]);
 
-  const revenuePending = orders
-    .filter((order) => order.status !== "cancelled")
-    .reduce((sum, order) => sum + order.subtotalRwf, 0);
+  const newLeads = leads.filter((lead) => lead.status === "new").length;
 
   const stats = [
     { label: "New orders", value: newOrders ?? 0 },
+    { label: "New leads", value: newLeads },
     { label: "Products", value: productCount.count ?? 0 },
     { label: "Out of stock", value: outOfStock.count ?? 0 },
-    { label: "Recent order value", value: formatRwf(revenuePending) },
   ];
 
   return (

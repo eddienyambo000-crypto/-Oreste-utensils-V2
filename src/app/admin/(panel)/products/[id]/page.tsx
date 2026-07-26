@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProductEditor } from "../ProductEditor";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
+import { getCategories } from "@/lib/data";
 import type { CategorySlug, Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -29,11 +30,10 @@ export default async function EditProductPage({
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
 
-  const { data } = await supabase
-    .from("ou_products")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+  const [{ data }, categories] = await Promise.all([
+    supabase.from("ou_products").select("*").eq("id", id).maybeSingle(),
+    getCategories(),
+  ]);
 
   if (!data) notFound();
   const row = data as ProductRow;
@@ -53,5 +53,10 @@ export default async function EditProductPage({
     createdAt: row.created_at,
   };
 
-  return <ProductEditor product={product} />;
+  return (
+    <ProductEditor
+      product={product}
+      categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+    />
+  );
 }
