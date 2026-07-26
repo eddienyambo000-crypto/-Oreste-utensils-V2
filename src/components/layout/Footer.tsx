@@ -144,14 +144,24 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-line pt-6 text-xs text-ink-faint sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-line pt-6 text-xs text-ink-faint sm:flex-row">
           <p>
             © {new Date().getFullYear()} {BUSINESS.legalName}. All rights reserved.
           </p>
-          <p>
-            Premium kitchenware retailer — {BUSINESS.address.street},{" "}
-            {BUSINESS.address.city}, {BUSINESS.address.country}
-          </p>
+          <nav aria-label="Legal" className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              href="/privacy"
+              className="transition-colors duration-200 hover:text-copper"
+            >
+              Privacy Policy
+            </Link>
+            <Link
+              href="/terms"
+              className="transition-colors duration-200 hover:text-copper"
+            >
+              Terms &amp; Conditions
+            </Link>
+          </nav>
         </div>
       </div>
     </footer>
