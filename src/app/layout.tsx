@@ -45,6 +45,11 @@ export const metadata: Metadata = {
     description: BUSINESS.description,
   },
   alternates: { canonical: "/" },
+  // Set GOOGLE_SITE_VERIFICATION once to verify ownership in Search Console —
+  // no code change or redeploy needed, just the env var.
+  verification: process.env.GOOGLE_SITE_VERIFICATION
+    ? { google: process.env.GOOGLE_SITE_VERIFICATION }
+    : undefined,
 };
 
 export default function RootLayout({
