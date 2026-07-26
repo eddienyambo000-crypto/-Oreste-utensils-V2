@@ -4,6 +4,7 @@ import { ProductCard } from "@/components/shop/ProductCard";
 import { Reveal } from "@/components/ui/Reveal";
 import {
   IconArrowRight,
+  IconCheck,
   IconClock,
   IconMapPin,
   IconShield,
@@ -205,6 +206,84 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* ── Guarantees ───────────────────────────────────────── */}
+      <section aria-labelledby="promise-heading" className="border-y border-line bg-surface py-14 lg:py-16">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <h2 id="promise-heading" className="sr-only">
+            Why shop with Oreste Utensils
+          </h2>
+          <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+            {[
+              {
+                icon: IconShield,
+                title: "Inspect before you pay",
+                body: "Check your order at the door. Not right? Don't pay for it.",
+              },
+              {
+                icon: IconTruck,
+                title: "Free delivery over 500K",
+                body: "Across Kigali. Below that, a small fee confirmed upfront.",
+              },
+              {
+                icon: IconStore,
+                title: "A real store, real stock",
+                body: "Come see and hold everything at City Plaza, open daily.",
+              },
+              {
+                icon: IconCheck,
+                title: "7-day exchange",
+                body: "Something off after delivery? We swap it, no drama.",
+              },
+            ].map((item) => (
+              <div key={item.title}>
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-copper-tint text-copper">
+                  <item.icon className="h-5 w-5" />
+                </span>
+                <h3 className="mt-4 font-display text-base font-semibold">{item.title}</h3>
+                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{item.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── B2B strip ────────────────────────────────────────── */}
+      <section aria-labelledby="b2b-heading" className="py-16 lg:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="relative overflow-hidden rounded-3xl bg-ink px-6 py-12 sm:px-12 lg:py-16">
+              <div className="relative grid items-center gap-8 lg:grid-cols-[1.5fr_1fr]">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-tint">
+                    Oreste for Business
+                  </p>
+                  <h2
+                    id="b2b-heading"
+                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] text-porcelain sm:text-4xl"
+                  >
+                    Run a restaurant or hotel? Buy at trade prices.
+                  </h2>
+                  <p className="mt-4 max-w-xl leading-relaxed text-porcelain/70">
+                    We supply Kigali&apos;s restaurants, hotels, cafés and
+                    institutions with cookware, tableware and cutlery — one
+                    supplier, wholesale pricing, consistent restock, delivered.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
+                  <Link
+                    href="/business"
+                    className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+                  >
+                    Get wholesale pricing
+                    <IconArrowRight className="h-4 w-4" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ── Story strip ──────────────────────────────────────── */}
       <section aria-labelledby="story-heading" className="bg-ink py-16 text-porcelain lg:py-24">
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
@@ -334,6 +413,39 @@ export default async function HomePage() {
               />
             </div>
           </Reveal>
+        </div>
+      </section>
+
+      {/* ── Closing CTA ──────────────────────────────────────── */}
+      <section className="pb-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="rounded-3xl bg-copper px-6 py-14 text-center text-white sm:px-12">
+            <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              Your kitchen deserves better. Start today.
+            </h2>
+            <p className="mx-auto mt-4 max-w-md text-white/80">
+              Browse the collection, order in minutes, and pay on delivery. Free
+              across Kigali over {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}.
+            </p>
+            <div className="mt-8 flex flex-wrap justify-center gap-4">
+              <Link
+                href="/shop"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-7 py-3.5 font-medium text-porcelain transition-[background-color,transform] duration-200 hover:bg-ink/85 active:scale-[0.98]"
+              >
+                Shop the collection
+                <IconArrowRight className="h-4 w-4" />
+              </Link>
+              <a
+                href={whatsappLink("Hello Oreste Utensils! I'd like to place an order.")}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 font-medium text-white transition-colors duration-200 hover:bg-white/10 active:scale-[0.98]"
+              >
+                <IconWhatsApp className="h-4 w-4" />
+                Order on WhatsApp
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </>

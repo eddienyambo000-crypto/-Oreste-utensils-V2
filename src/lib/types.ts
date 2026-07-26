@@ -1,10 +1,9 @@
-export type CategorySlug =
-  | "cookware"
-  | "dinnerware"
-  | "cutlery"
-  | "storage"
-  | "small-appliances"
-  | "serveware";
+/**
+ * Category slug. The launch set is cookware, dinnerware, cutlery, storage,
+ * small-appliances and serveware, but categories are managed from the admin
+ * panel so any slug is valid at runtime.
+ */
+export type CategorySlug = string;
 
 export interface Category {
   id: string;
@@ -66,5 +65,30 @@ export interface Order extends OrderInput {
   deliveryFree: boolean;
   totalRwf: number;
   status: OrderStatus;
+  createdAt: string;
+}
+
+export const BUSINESS_TYPES = [
+  "Restaurant",
+  "Hotel / Lodge",
+  "Café / Bakery",
+  "Catering / Events",
+  "School / Institution",
+  "Retailer / Reseller",
+  "Other",
+] as const;
+
+export type BusinessType = (typeof BUSINESS_TYPES)[number];
+
+export type LeadStatus = "new" | "contacted" | "quoted" | "won" | "lost";
+
+export interface Lead {
+  id: string;
+  businessName: string;
+  contactName: string;
+  phone: string;
+  businessType: string;
+  message: string | null;
+  status: LeadStatus;
   createdAt: string;
 }

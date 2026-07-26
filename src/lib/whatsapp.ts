@@ -12,6 +12,25 @@ export function productInquiryLink(productName: string): string {
   );
 }
 
+export function buildTradeMessage(input: {
+  businessName: string;
+  contactName: string;
+  phone: string;
+  businessType: string;
+  message: string | null;
+}): string {
+  const lines = [
+    "Wholesale / trade enquiry — oresteutensils.com",
+    "",
+    `Business: ${input.businessName} (${input.businessType})`,
+    `Contact: ${input.contactName}`,
+    `Phone: ${input.phone}`,
+  ];
+  if (input.message) lines.push(`Details: ${input.message}`);
+  lines.push("", "Please send wholesale pricing.");
+  return lines.join("\n");
+}
+
 export function buildOrderMessage(input: {
   items: CartItem[];
   customerName: string;
