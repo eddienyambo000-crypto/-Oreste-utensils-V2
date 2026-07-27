@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
+import { Parallax } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 import {
   IconArrowRight,
@@ -14,17 +15,18 @@ import {
   IconWhatsApp,
 } from "@/components/ui/icons";
 import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF } from "@/lib/constants";
-import { getCategories, getProducts, getTestimonials } from "@/lib/data";
+import { getCategories, getProducts, getSiteImages, getTestimonials } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [categories, featured, testimonials] = await Promise.all([
+  const [categories, featured, testimonials, siteImages] = await Promise.all([
     getCategories(),
     getProducts({ featuredOnly: true }),
     getTestimonials(),
+    getSiteImages(),
   ]);
 
   return (
@@ -99,14 +101,16 @@ export default async function HomePage() {
 
           <div className="relative animate-fade-in" style={{ animationDelay: "150ms" }}>
             <div className="relative aspect-[5/6] overflow-hidden rounded-3xl shadow-card-hover sm:aspect-[4/3] lg:aspect-[5/6]">
-              <Image
-                src="/images/hero-kitchen.webp"
-                alt="A bright kitchen counter with stainless cookware at Oreste Utensils"
-                fill
-                priority
-                sizes="(max-width: 1024px) 100vw, 45vw"
-                className="object-cover"
-              />
+              <Parallax strength={28} className="absolute inset-[-6%]">
+                <Image
+                  src={siteImages.hero_image}
+                  alt="A bright kitchen counter with stainless cookware at Oreste Utensils"
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 45vw"
+                  className="scale-110 object-cover"
+                />
+              </Parallax>
             </div>
             <div className="absolute -bottom-5 left-6 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-card-hover backdrop-blur-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
@@ -302,7 +306,7 @@ export default async function HomePage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="relative aspect-[3/4] overflow-hidden rounded-2xl">
                 <Image
-                  src="/images/story-cooking.webp"
+                  src={siteImages.story_image_1}
                   alt="A couple cooking together with quality cookware"
                   fill
                   sizes="(max-width: 1024px) 50vw, 25vw"
@@ -311,7 +315,7 @@ export default async function HomePage() {
               </div>
               <div className="relative mt-8 aspect-[3/4] overflow-hidden rounded-2xl">
                 <Image
-                  src="/images/story-searing.webp"
+                  src={siteImages.story_image_2}
                   alt="Spices being added to a stainless steel pan"
                   fill
                   sizes="(max-width: 1024px) 50vw, 25vw"
@@ -416,7 +420,7 @@ export default async function HomePage() {
           <Reveal delay={100}>
             <div className="relative aspect-[4/3] overflow-hidden rounded-3xl shadow-card-hover">
               <Image
-                src="/images/visit-kitchen.webp"
+                src={siteImages.visit_image}
                 alt="A bright kitchen styled with cookware from Oreste Utensils"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"

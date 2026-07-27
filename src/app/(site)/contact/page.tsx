@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ContactForm } from "@/components/layout/ContactForm";
 import {
   IconClock,
   IconInstagram,
@@ -119,6 +120,10 @@ export default function ContactPage() {
             className="h-full min-h-80 w-full"
           />
         </div>
+      </div>
+
+      <div className="mt-8 max-w-2xl">
+        <ContactForm />
       </div>
     </div>
   );

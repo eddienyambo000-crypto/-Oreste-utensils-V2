@@ -1,4 +1,8 @@
-import { FREE_DELIVERY_THRESHOLD_RWF } from "./constants";
+import {
+  FREE_DELIVERY_THRESHOLD_RWF,
+  SITE_IMAGE_KEYS,
+  type SiteImageKey,
+} from "./constants";
 import { seedCategories, seedProducts } from "./seed";
 import { getPublicClient, isSupabaseConfigured } from "./supabase/public";
 import type { Category, CategorySlug, Product } from "./types";
@@ -199,6 +203,26 @@ export async function getTestimonials(): Promise<import("./types").Testimonial[]
     sortOrder: row.sort_order,
     createdAt: row.created_at,
   }));
+}
+
+export type SiteImages = Record<SiteImageKey, string>;
+
+/** Editable site photos — admin overrides from ou_settings, else the bundled defaults. */
+export async function getSiteImages(): Promise<SiteImages> {
+  const result = { ...SITE_IMAGE_KEYS } as SiteImages;
+  if (!isSupabaseConfigured) return result;
+  const keys = Object.keys(SITE_IMAGE_KEYS);
+  const { data } = await getPublicClient()
+    .from("ou_settings")
+    .select("key, value")
+    .in("key", keys);
+  for (const row of (data as { key: string; value: string }[] | null) ?? []) {
+    const value = row.value?.trim();
+    if (value && row.key in result) {
+      result[row.key as SiteImageKey] = value;
+    }
+  }
+  return result;
 }
 
 /** Looker Studio dashboard embed URL for the admin Analytics page, if set. */

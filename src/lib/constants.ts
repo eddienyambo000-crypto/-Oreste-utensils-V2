@@ -42,6 +42,28 @@ export const FREE_DELIVERY_THRESHOLD_RWF = 500_000;
 
 export const CART_STORAGE_KEY = "oreste-cart-v1";
 
+/**
+ * Editable site photos. Keys map to rows in ou_settings; defaults are the
+ * bundled images. The admin can swap any of these from Settings → Site photos.
+ */
+export const SITE_IMAGE_KEYS = {
+  hero_image: "/images/hero-kitchen.webp",
+  story_image_1: "/images/story-cooking.webp",
+  story_image_2: "/images/story-searing.webp",
+  about_image: "/images/about-kitchen.webp",
+  visit_image: "/images/visit-kitchen.webp",
+} as const;
+
+export type SiteImageKey = keyof typeof SITE_IMAGE_KEYS;
+
+export const SITE_IMAGE_LABELS: Record<SiteImageKey, string> = {
+  hero_image: "Homepage hero",
+  story_image_1: "Story photo (left)",
+  story_image_2: "Story photo (right)",
+  about_image: "About page photo",
+  visit_image: "Visit-the-store photo",
+};
+
 export const KIGALI_AREAS = [
   "Nyarugenge (City Centre)",
   "Kacyiru",

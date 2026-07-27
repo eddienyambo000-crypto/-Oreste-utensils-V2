@@ -9,6 +9,7 @@ import {
   IconTruck,
 } from "@/components/ui/icons";
 import { BUSINESS } from "@/lib/constants";
+import { getSiteImages } from "@/lib/data";
 
 export const metadata: Metadata = {
   title: "About Oreste Utensils",
@@ -35,7 +36,8 @@ const VALUES = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const siteImages = await getSiteImages();
   return (
     <div>
       {/* Intro */}
@@ -67,7 +69,7 @@ export default function AboutPage() {
           <Reveal>
             <div className="relative aspect-[4/5] overflow-hidden rounded-3xl shadow-card-hover">
               <Image
-                src="/images/about-kitchen.webp"
+                src={siteImages.about_image}
                 alt="A couple comparing quality cookware at Oreste Utensils"
                 fill
                 priority

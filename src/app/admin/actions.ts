@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
+import { SITE_IMAGE_KEYS } from "@/lib/constants";
 import type { LeadStatus, OrderStatus } from "@/lib/types";
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -328,6 +329,41 @@ export async function updateAnalyticsEmbedUrl(
   });
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/analytics");
+  return { ok: true };
+}
+
+const siteImageKeySchema = z.enum(
+  Object.keys(SITE_IMAGE_KEYS) as [string, ...string[]],
+);
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => v === "" || /^https:\/\//.test(v) || v.startsWith("/"), "Invalid image URL.");
+
+/** Sets or resets ("") one editable site photo. */
+export async function updateSiteImage(
+  key: string,
+  url: string,
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const parsedKey = siteImageKeySchema.safeParse(key);
+  const parsedUrl = imageUrlSchema.safeParse(url);
+  if (!parsedKey.success || !parsedUrl.success) {
+    return { ok: false, error: "Invalid image." };
+  }
+  const { error } = await supabase
+    .from("ou_settings")
+    .upsert({ key: parsedKey.data, value: parsedUrl.data });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/about");
+  revalidatePath("/contact");
+  revalidatePath("/admin/settings");
   return { ok: true };
 }
 
