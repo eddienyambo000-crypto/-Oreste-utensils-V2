@@ -147,6 +147,32 @@ export function IconStore(props: IconProps) {
   );
 }
 
+export function IconPencil(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 20h4L18.5 9.5a2 2 0 0 0-2.8-2.8L5 17.2V20Z" />
+      <path d="M13.5 6.5l4 4" />
+    </svg>
+  );
+}
+
+export function IconChart(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 4v16h16" />
+      <path d="M8 15v-3M12 15V9M16 15v-6" />
+    </svg>
+  );
+}
+
+export function IconExternal(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M14 5h5v5M19 5l-8 8M18 14v4a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h4" />
+    </svg>
+  );
+}
+
 export function IconInstagram(props: IconProps) {
   return (
     <svg {...base(props)}>

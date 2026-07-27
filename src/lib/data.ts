@@ -168,3 +168,15 @@ export async function getLogoUrl(): Promise<string | null> {
   const value = data?.value?.trim();
   return value ? value : null;
 }
+
+/** Looker Studio dashboard embed URL for the admin Analytics page, if set. */
+export async function getAnalyticsEmbedUrl(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data } = await getPublicClient()
+    .from("ou_settings")
+    .select("value")
+    .eq("key", "analytics_embed_url")
+    .maybeSingle();
+  const value = data?.value?.trim();
+  return value ? value : null;
+}

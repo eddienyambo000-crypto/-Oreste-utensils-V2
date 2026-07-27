@@ -98,6 +98,10 @@ export function ProductEditor({
     setImages((prev) => prev.filter((image) => image !== url));
   }
 
+  function setMainImage(url: string) {
+    setImages((prev) => [url, ...prev.filter((image) => image !== url)]);
+  }
+
   function updateSpec(index: number, field: keyof SpecRow, value: string) {
     setSpecs((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
@@ -180,25 +184,33 @@ export function ProductEditor({
           {/* Images */}
           <div className="rounded-2xl border border-line bg-surface p-5">
             <span className="text-sm font-medium text-ink">Images</span>
-            <div className="mt-3 flex flex-wrap gap-3">
+            <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
               {images.map((url, index) => (
                 <div
                   key={url}
-                  className="group relative h-24 w-24 overflow-hidden rounded-xl border border-line bg-cream"
+                  className="relative aspect-square overflow-hidden rounded-xl border border-line bg-cream"
                 >
-                  <Image src={url} alt="" fill sizes="96px" className="object-cover" />
-                  {index === 0 && (
-                    <span className="absolute left-1 top-1 rounded bg-ink/70 px-1.5 py-0.5 text-[0.6rem] font-semibold text-porcelain">
+                  <Image src={url} alt="" fill sizes="120px" className="object-cover" />
+                  {index === 0 ? (
+                    <span className="absolute left-1.5 top-1.5 rounded-md bg-copper px-1.5 py-0.5 text-[0.6rem] font-semibold text-white shadow-sm">
                       Main
                     </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setMainImage(url)}
+                      className="absolute bottom-1.5 left-1.5 cursor-pointer rounded-md bg-ink/75 px-1.5 py-0.5 text-[0.6rem] font-medium text-porcelain backdrop-blur-sm transition-colors duration-150 hover:bg-ink active:scale-95"
+                    >
+                      Set main
+                    </button>
                   )}
                   <button
                     type="button"
                     onClick={() => removeImage(url)}
                     aria-label="Remove image"
-                    className="absolute right-1 top-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-ink/70 text-porcelain opacity-0 transition-opacity duration-200 group-hover:opacity-100"
+                    className="absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-ink/75 text-porcelain shadow-sm backdrop-blur-sm transition-colors duration-150 hover:bg-copper-deep active:scale-90"
                   >
-                    <IconClose className="h-3.5 w-3.5" />
+                    <IconClose className="h-4 w-4" />
                   </button>
                 </div>
               ))}
@@ -207,10 +219,10 @@ export function ProductEditor({
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line-strong text-ink-faint transition-colors duration-200 hover:border-copper hover:text-copper disabled:opacity-60"
+                  className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line-strong text-ink-faint transition-colors duration-200 hover:border-copper hover:bg-copper-tint/20 hover:text-copper disabled:opacity-60"
                 >
-                  <IconPlus className="h-5 w-5" />
-                  <span className="text-[0.65rem]">{uploading ? "Uploading…" : "Add"}</span>
+                  <IconPlus className="h-6 w-6" />
+                  <span className="text-xs font-medium">{uploading ? "Uploading…" : "Add photo"}</span>
                 </button>
               )}
             </div>
@@ -223,7 +235,10 @@ export function ProductEditor({
               className="hidden"
             />
             <p className="mt-3 text-xs text-ink-faint">
-              First image is the main photo. Up to 8, uploaded to Supabase Storage.
+              Tap <span className="font-medium text-ink-soft">Add photo</span> to upload (up
+              to 8). The <span className="font-medium text-ink-soft">Main</span> photo shows
+              first — tap &ldquo;Set main&rdquo; on any other to promote it. Tap the ✕ to
+              remove.
             </p>
           </div>
 

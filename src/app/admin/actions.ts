@@ -242,6 +242,39 @@ const logoUrlSchema = z
   .startsWith("https://")
   .nullable();
 
+// Only allow embedding trusted Google dashboard hosts in the admin iframe.
+const analyticsEmbedSchema = z
+  .string()
+  .trim()
+  .max(1000)
+  .refine(
+    (value) =>
+      value === "" ||
+      /^https:\/\/(lookerstudio|datastudio)\.google\.com\/embed\//.test(value),
+    "Paste the Looker Studio EMBED url (lookerstudio.google.com/embed/…).",
+  );
+
+/** Sets or clears the Looker Studio dashboard embedded on the Analytics page. */
+export async function updateAnalyticsEmbedUrl(
+  url: string,
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const parsed = analyticsEmbedSchema.safeParse(url);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid URL." };
+  }
+  const { error } = await supabase.from("ou_settings").upsert({
+    key: "analytics_embed_url",
+    value: parsed.data,
+  });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/analytics");
+  return { ok: true };
+}
+
 /** Sets or clears (null) the brand logo shown in the nav and footer. */
 export async function updateLogoUrl(
   url: string | null,
