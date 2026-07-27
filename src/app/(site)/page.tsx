@@ -146,29 +146,36 @@ export default async function HomePage() {
           </Reveal>
 
           <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
-            {categories.map((category, index) => (
+            {categories.slice(0, 6).map((category, index) => (
               <Reveal key={category.id} delay={index * 60}>
                 <Link
                   href={`/shop/${category.slug}`}
                   className="group relative block overflow-hidden rounded-2xl"
                 >
                   <div className="relative aspect-[4/3]">
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-                    />
+                    {category.image ? (
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        fill
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
+                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
+                      />
+                    ) : (
+                      // Branded fallback when a category has no photo yet.
+                      <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink to-copper-deep transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]" />
+                    )}
                     <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/15 to-transparent" />
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
                     <h3 className="font-display text-lg font-semibold text-white sm:text-xl">
                       {category.name}
                     </h3>
-                    <p className="mt-0.5 hidden text-sm text-white/75 sm:block">
-                      {category.description}
-                    </p>
+                    {category.description && (
+                      <p className="mt-0.5 hidden text-sm text-white/75 sm:block">
+                        {category.description}
+                      </p>
+                    )}
                   </div>
                 </Link>
               </Reveal>
