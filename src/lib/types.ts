@@ -80,6 +80,17 @@ export const BUSINESS_TYPES = [
 
 export type BusinessType = (typeof BUSINESS_TYPES)[number];
 
+export interface Testimonial {
+  id: string;
+  clientName: string;
+  business: string | null;
+  quote: string;
+  photo: string | null;
+  rating: number;
+  sortOrder: number;
+  createdAt: string;
+}
+
 export type LeadStatus = "new" | "contacted" | "quoted" | "won" | "lost";
 
 export interface Lead {

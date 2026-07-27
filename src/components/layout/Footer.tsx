@@ -163,6 +163,18 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
             </Link>
           </nav>
         </div>
+
+        <p className="mt-6 text-center text-xs text-ink-faint">
+          Built by{" "}
+          <a
+            href="https://eddie-portfolio-gamma.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-ink-soft underline underline-offset-2 transition-colors duration-200 hover:text-copper"
+          >
+            Eddie Nyambo
+          </a>
+        </p>
       </div>
     </footer>
   );

@@ -22,11 +22,6 @@ function slugify(value: string): string {
     .replace(/-+/g, "-");
 }
 
-interface SpecRow {
-  key: string;
-  value: string;
-}
-
 export function ProductEditor({
   product,
   categories,
@@ -40,7 +35,6 @@ export function ProductEditor({
 
   const [name, setName] = useState(product?.name ?? "");
   const [slug, setSlug] = useState(product?.slug ?? "");
-  const [slugTouched, setSlugTouched] = useState(isEdit);
   const [categorySlug, setCategorySlug] = useState<string>(
     product?.categorySlug ?? categories[0]?.slug ?? "",
   );
@@ -48,13 +42,7 @@ export function ProductEditor({
   const [shortDescription, setShortDescription] = useState(
     product?.shortDescription ?? "",
   );
-  const [description, setDescription] = useState(product?.description ?? "");
   const [images, setImages] = useState<string[]>(product?.images ?? []);
-  const [specs, setSpecs] = useState<SpecRow[]>(
-    product?.specs && Object.keys(product.specs).length > 0
-      ? Object.entries(product.specs).map(([key, value]) => ({ key, value }))
-      : [{ key: "", value: "" }],
-  );
   const [featured, setFeatured] = useState(product?.featured ?? false);
   const [inStock, setInStock] = useState(product?.inStock ?? true);
 
@@ -65,7 +53,9 @@ export function ProductEditor({
 
   function handleNameChange(value: string) {
     setName(value);
-    if (!slugTouched) setSlug(slugify(value));
+    // Keep the URL in sync with the name for new products; never change an
+    // existing product's slug (it would break its live link and SEO).
+    if (!isEdit) setSlug(slugify(value));
   }
 
   async function handleFiles(files: FileList | null) {
@@ -102,34 +92,25 @@ export function ProductEditor({
     setImages((prev) => [url, ...prev.filter((image) => image !== url)]);
   }
 
-  function updateSpec(index: number, field: keyof SpecRow, value: string) {
-    setSpecs((prev) =>
-      prev.map((row, i) => (i === index ? { ...row, [field]: value } : row)),
-    );
-  }
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
     setSaving(true);
 
-    const specObject: Record<string, string> = {};
-    for (const row of specs) {
-      const key = row.key.trim();
-      const value = row.value.trim();
-      if (key && value) specObject[key] = value;
-    }
+    const finalSlug = (isEdit ? slug : slugify(name)).trim() || slugify(name);
+    const shortText = shortDescription.trim();
 
     const result = await saveProduct({
       id: product?.id,
       name: name.trim(),
-      slug: slug.trim(),
+      slug: finalSlug,
       categorySlug,
       priceRwf: Number(priceRwf),
-      shortDescription: shortDescription.trim(),
-      description: description.trim(),
+      shortDescription: shortText,
+      // The product page reuses the same description — no second long field.
+      description: product?.description?.trim() || shortText,
       images,
-      specs: specObject,
+      specs: product?.specs ?? {},
       featured,
       inStock,
     });
@@ -258,94 +239,21 @@ export function ProductEditor({
           </div>
 
           <div>
-            <label htmlFor="slug" className="text-sm font-medium text-ink">
-              URL slug
-            </label>
-            <input
-              id="slug"
-              type="text"
-              required
-              value={slug}
-              onChange={(event) => {
-                setSlugTouched(true);
-                setSlug(slugify(event.target.value));
-              }}
-              className={`${fieldClass} font-mono text-sm`}
-              placeholder="ember-enamelled-dutch-oven"
-            />
-            <p className="mt-1 text-xs text-ink-faint">
-              Lives at /product/{slug || "…"}
-            </p>
-          </div>
-
-          <div>
             <label htmlFor="short" className="text-sm font-medium text-ink">
-              Short description
+              Description
             </label>
             <textarea
               id="short"
               required
-              rows={2}
+              rows={3}
               value={shortDescription}
               onChange={(event) => setShortDescription(event.target.value)}
-              className={`${fieldClass} resize-none`}
-              placeholder="One punchy line shown on product cards."
-            />
-          </div>
-
-          <div>
-            <label htmlFor="description" className="text-sm font-medium text-ink">
-              Full description
-            </label>
-            <textarea
-              id="description"
-              required
-              rows={6}
-              value={description}
-              onChange={(event) => setDescription(event.target.value)}
               className={`${fieldClass} resize-y`}
+              placeholder="A line or two about this item — what it is and why it's good. Shows on the shop and helps Google find it."
             />
-          </div>
-
-          {/* Specs */}
-          <div className="rounded-2xl border border-line bg-surface p-5">
-            <span className="text-sm font-medium text-ink">Specifications</span>
-            <div className="mt-3 space-y-2">
-              {specs.map((row, index) => (
-                <div key={index} className="flex gap-2">
-                  <input
-                    type="text"
-                    value={row.key}
-                    onChange={(event) => updateSpec(index, "key", event.target.value)}
-                    placeholder="Label (e.g. Capacity)"
-                    className="w-2/5 rounded-lg border border-line-strong bg-porcelain px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="text"
-                    value={row.value}
-                    onChange={(event) => updateSpec(index, "value", event.target.value)}
-                    placeholder="Value (e.g. 5.2 litres)"
-                    className="flex-1 rounded-lg border border-line-strong bg-porcelain px-3 py-2 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSpecs((prev) => prev.filter((_, i) => i !== index))}
-                    aria-label="Remove specification"
-                    className="cursor-pointer rounded-lg px-2 text-ink-faint transition-colors duration-200 hover:text-copper-deep"
-                  >
-                    <IconClose className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={() => setSpecs((prev) => [...prev, { key: "", value: "" }])}
-              className="mt-3 inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
-            >
-              <IconPlus className="h-4 w-4" />
-              Add specification
-            </button>
+            <p className="mt-1 text-xs text-ink-faint">
+              Keep it short. This is all customers and search engines need.
+            </p>
           </div>
         </div>
 

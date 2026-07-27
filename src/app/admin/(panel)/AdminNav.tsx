@@ -10,6 +10,7 @@ const LINKS: { href: string; label: string; exact?: boolean }[] = [
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/products", label: "Products" },
   { href: "/admin/categories", label: "Categories" },
+  { href: "/admin/testimonials", label: "Reviews" },
   { href: "/admin/settings", label: "Settings" },
 ];
 

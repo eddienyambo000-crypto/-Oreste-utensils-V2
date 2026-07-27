@@ -3,6 +3,7 @@ import { CartDrawer } from "@/components/cart/CartDrawer";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { getFreeDeliveryThreshold, getLogoUrl } from "@/lib/data";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
@@ -78,6 +79,7 @@ export default async function SiteLayout({
       <Footer logoUrl={logoUrl} />
       <CartDrawer freeDeliveryThreshold={threshold} />
       <WhatsAppButton />
+      <MobileNav />
     </CartProvider>
   );
 }

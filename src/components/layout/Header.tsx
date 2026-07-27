@@ -10,9 +10,10 @@ import { IconBag, IconClose, IconMenu } from "@/components/ui/icons";
 const NAV_LINKS = [
   { href: "/shop", label: "Shop" },
   { href: "/business", label: "For Business" },
+  { href: "/testimonials", label: "Reviews" },
   { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
-  { href: "/contact", label: "Visit us" },
+  { href: "/contact", label: "Contact" },
 ] as const;
 
 export function Header({ logoUrl }: { logoUrl?: string | null }) {

@@ -178,6 +178,62 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+const testimonialSchema = z.object({
+  id: z.string().optional(),
+  clientName: z.string().trim().min(2).max(120),
+  business: z.string().trim().max(160).nullable(),
+  quote: z.string().trim().min(2).max(1000),
+  photo: z.string().url().or(z.string().startsWith("/")).nullable(),
+  rating: z.coerce.number().int().min(1).max(5),
+  sortOrder: z.coerce.number().int().min(0).max(999),
+});
+
+export type TestimonialFormInput = z.input<typeof testimonialSchema>;
+
+export async function saveTestimonial(
+  input: TestimonialFormInput,
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const parsed = testimonialSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid testimonial." };
+  }
+  const data = parsed.data;
+  const row = {
+    client_name: data.clientName,
+    business: data.business,
+    quote: data.quote,
+    photo: data.photo,
+    rating: data.rating,
+    sort_order: data.sortOrder,
+  };
+  const query = data.id
+    ? supabase.from("ou_testimonials").update(row).eq("id", data.id)
+    : supabase.from("ou_testimonials").insert(row);
+  const { error } = await query;
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/testimonials");
+  revalidatePath("/");
+  revalidatePath("/admin/testimonials");
+  return { ok: true };
+}
+
+export async function deleteTestimonial(id: string): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const { error } = await supabase.from("ou_testimonials").delete().eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/testimonials");
+  revalidatePath("/");
+  revalidatePath("/admin/testimonials");
+  return { ok: true };
+}
+
 export async function updateLeadStatus(
   id: string,
   status: LeadStatus,

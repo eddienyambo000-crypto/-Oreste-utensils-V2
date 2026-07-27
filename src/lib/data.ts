@@ -169,6 +169,38 @@ export async function getLogoUrl(): Promise<string | null> {
   return value ? value : null;
 }
 
+interface TestimonialRow {
+  id: string;
+  client_name: string;
+  business: string | null;
+  quote: string;
+  photo: string | null;
+  rating: number;
+  sort_order: number;
+  created_at: string;
+}
+
+export async function getTestimonials(): Promise<import("./types").Testimonial[]> {
+  if (!isSupabaseConfigured) return [];
+  const { data, error } = await getPublicClient()
+    .from("ou_testimonials")
+    .select("*")
+    .order("sort_order")
+    .order("created_at", { ascending: false });
+  // Table may not exist yet (migration pending) — fail soft.
+  if (error) return [];
+  return (data as TestimonialRow[]).map((row) => ({
+    id: row.id,
+    clientName: row.client_name,
+    business: row.business,
+    quote: row.quote,
+    photo: row.photo,
+    rating: row.rating,
+    sortOrder: row.sort_order,
+    createdAt: row.created_at,
+  }));
+}
+
 /** Looker Studio dashboard embed URL for the admin Analytics page, if set. */
 export async function getAnalyticsEmbedUrl(): Promise<string | null> {
   if (!isSupabaseConfigured) return null;

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { TestimonialCard } from "@/components/shop/TestimonialCard";
 import { Reveal } from "@/components/ui/Reveal";
 import {
   IconArrowRight,
@@ -13,16 +14,17 @@ import {
   IconWhatsApp,
 } from "@/components/ui/icons";
 import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF } from "@/lib/constants";
-import { getCategories, getProducts } from "@/lib/data";
+import { getCategories, getProducts, getTestimonials } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [categories, featured] = await Promise.all([
+  const [categories, featured, testimonials] = await Promise.all([
     getCategories(),
     getProducts({ featuredOnly: true }),
+    getTestimonials(),
   ]);
 
   return (
@@ -184,34 +186,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ── Featured products ────────────────────────────────── */}
-      <section aria-labelledby="featured-heading" className="py-16 lg:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                  Customer favourites
-                </p>
-                <h2
-                  id="featured-heading"
-                  className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
-                >
-                  The pieces Kigali keeps coming back for
-                </h2>
+      {/* ── Featured products (only when there are featured items) ── */}
+      {featured.length > 0 && (
+        <section aria-labelledby="featured-heading" className="py-16 lg:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <Reveal>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
+                    Customer favourites
+                  </p>
+                  <h2
+                    id="featured-heading"
+                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
+                  >
+                    The pieces Kigali keeps coming back for
+                  </h2>
+                </div>
               </div>
-            </div>
-          </Reveal>
+            </Reveal>
 
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-            {featured.slice(0, 8).map((product, index) => (
-              <Reveal key={product.id} delay={index * 60}>
-                <ProductCard product={product} />
-              </Reveal>
-            ))}
+            <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+              {featured.slice(0, 8).map((product, index) => (
+                <Reveal key={product.id} delay={index * 60}>
+                  <ProductCard product={product} />
+                </Reveal>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Guarantees ───────────────────────────────────────── */}
       <section aria-labelledby="promise-heading" className="border-y border-line bg-surface py-14 lg:py-16">
@@ -422,6 +426,43 @@ export default async function HomePage() {
           </Reveal>
         </div>
       </section>
+
+      {/* ── Testimonials ─────────────────────────────────────── */}
+      {testimonials.length > 0 && (
+        <section aria-labelledby="reviews-heading" className="bg-surface py-16 lg:py-24">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <Reveal>
+              <div className="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
+                    What our clients say
+                  </p>
+                  <h2
+                    id="reviews-heading"
+                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
+                  >
+                    Trusted in kitchens across Kigali
+                  </h2>
+                </div>
+                <Link
+                  href="/testimonials"
+                  className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
+                >
+                  Read more reviews
+                  <IconArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </Reveal>
+            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {testimonials.slice(0, 3).map((t, index) => (
+                <Reveal key={t.id} delay={index * 70}>
+                  <TestimonialCard testimonial={t} />
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Closing CTA ──────────────────────────────────────── */}
       <section className="pb-20">
