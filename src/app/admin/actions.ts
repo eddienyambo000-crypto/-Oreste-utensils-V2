@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
 import { SITE_IMAGE_KEYS } from "@/lib/constants";
-import type { LeadStatus, OrderStatus } from "@/lib/types";
+import type { LeadStatus, MessageStatus, OrderStatus } from "@/lib/types";
 
 const ORDER_STATUSES: OrderStatus[] = [
   "new",
@@ -15,6 +15,8 @@ const ORDER_STATUSES: OrderStatus[] = [
 ];
 
 const LEAD_STATUSES: LeadStatus[] = ["new", "contacted", "quoted", "won", "lost"];
+
+const MESSAGE_STATUSES: MessageStatus[] = ["new", "read", "replied"];
 
 const slugField = z
   .string()
@@ -249,6 +251,23 @@ export async function updateLeadStatus(
   const { error } = await supabase.from("ou_leads").update({ status }).eq("id", id);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/leads");
+  return { ok: true };
+}
+
+export async function updateMessageStatus(
+  id: string,
+  status: MessageStatus,
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  if (!MESSAGE_STATUSES.includes(status)) {
+    return { ok: false, error: "Invalid status." };
+  }
+  const { error } = await supabase.from("ou_messages").update({ status }).eq("id", id);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/admin/messages");
   return { ok: true };
 }
 

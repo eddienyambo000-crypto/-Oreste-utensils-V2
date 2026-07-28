@@ -29,25 +29,24 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
           className="flex items-center gap-2"
           aria-label="Oreste Utensils — home"
         >
-          {logoUrl ? (
+          {logoUrl && (
             <Image
               src={logoUrl}
-              alt="Oreste Utensils"
-              width={160}
-              height={40}
+              alt=""
+              width={44}
+              height={44}
               priority
-              className="h-9 w-auto object-contain"
+              className="h-9 w-9 shrink-0 rounded-lg object-contain"
             />
-          ) : (
-            <>
-              <span className="font-display text-2xl font-bold tracking-tight text-ink">
-                Oreste
-              </span>
-              <span className="hidden text-[0.65rem] font-semibold uppercase tracking-[0.22em] text-copper sm:inline">
-                Utensils
-              </span>
-            </>
           )}
+          <span className="flex items-baseline gap-1.5 leading-none">
+            <span className="font-display text-xl font-bold tracking-tight text-ink sm:text-2xl">
+              Oreste
+            </span>
+            <span className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-copper sm:text-[0.65rem]">
+              Utensils
+            </span>
+          </span>
         </Link>
 
         <nav aria-label="Main navigation" className="hidden md:block">

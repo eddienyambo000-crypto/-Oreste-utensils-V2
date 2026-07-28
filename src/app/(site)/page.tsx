@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ProductCard } from "@/components/shop/ProductCard";
+import { ProductMarquee } from "@/components/shop/ProductMarquee";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
 import { Parallax } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
@@ -22,26 +23,44 @@ import { whatsappLink } from "@/lib/whatsapp";
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [categories, featured, testimonials, siteImages] = await Promise.all([
+  const [categories, products, testimonials, siteImages] = await Promise.all([
     getCategories(),
-    getProducts({ featuredOnly: true }),
+    getProducts(),
     getTestimonials(),
     getSiteImages(),
   ]);
+  const featured = products.filter((product) => product.featured);
+  const latest = products;
 
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-12 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pb-24 lg:pt-20">
+        {/* Blurred photo backdrop for depth */}
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
+          <Image
+            src={siteImages.hero_image}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="scale-110 object-cover opacity-20 blur-2xl"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-porcelain/85 via-porcelain/92 to-porcelain" />
+        </div>
+
+        {/* Sliding latest products */}
+        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
+          <ProductMarquee products={latest} />
+        </div>
+
+        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pb-24 lg:pt-8">
           <div>
             <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
               Premium kitchenware · City Plaza, Kigali
             </p>
-            <h1 className="mt-5 animate-fade-up font-display text-[2.75rem] font-bold leading-[1.05] tracking-[-0.03em] text-ink sm:text-6xl lg:text-[4.25rem]">
-              Everything your
-              <br />
-              kitchen{" "}
+            <h1 className="mt-4 animate-fade-up font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
+              Everything your kitchen{" "}
               <em className="font-display italic text-copper">deserves.</em>
             </h1>
             <p

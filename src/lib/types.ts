@@ -93,6 +93,17 @@ export interface Testimonial {
 
 export type LeadStatus = "new" | "contacted" | "quoted" | "won" | "lost";
 
+export type MessageStatus = "new" | "read" | "replied";
+
+export interface Message {
+  id: string;
+  name: string;
+  phone: string | null;
+  message: string;
+  status: MessageStatus;
+  createdAt: string;
+}
+
 export interface Lead {
   id: string;
   businessName: string;
