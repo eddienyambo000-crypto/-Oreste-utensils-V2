@@ -36,7 +36,7 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
               width={44}
               height={44}
               priority
-              className="h-9 w-9 shrink-0 rounded-lg object-contain"
+              className="h-10 w-10 shrink-0 rounded-full object-contain"
             />
           )}
           <span className="flex items-baseline gap-1.5 leading-none">

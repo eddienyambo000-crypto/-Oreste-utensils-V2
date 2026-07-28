@@ -49,13 +49,21 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-b from-porcelain/85 via-porcelain/92 to-porcelain" />
         </div>
 
-        {/* Sliding latest products */}
-        <div className="relative z-10 mx-auto max-w-7xl px-4 pt-6 sm:px-6 lg:px-8">
-          <ProductMarquee products={latest} />
-        </div>
+        {/*
+          One DOM, responsive arrangement:
+          · Mobile (flex column): copy → sliders (middle) → hero image with the
+            "Visit the store" card right beneath the sliders.
+          · Desktop (grid): sliders become a full-width strip on top, then a
+            two-column [copy | image] row underneath.
+        */}
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8 lg:px-8 lg:pb-24 lg:pt-8">
+          {/* Sliders — middle on mobile, full-width top on desktop */}
+          <div className="order-2 lg:order-none lg:col-span-2">
+            <ProductMarquee products={latest} />
+          </div>
 
-        <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:px-8 lg:pb-24 lg:pt-8">
-          <div>
+          {/* Copy */}
+          <div className="order-1">
             <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
               Premium kitchenware · City Plaza, Kigali
             </p>
@@ -118,7 +126,7 @@ export default async function HomePage() {
             </dl>
           </div>
 
-          <div className="relative animate-fade-in" style={{ animationDelay: "150ms" }}>
+          <div className="relative order-3 mb-5 animate-fade-in lg:mb-0" style={{ animationDelay: "150ms" }}>
             <div className="relative aspect-[5/6] overflow-hidden rounded-3xl shadow-card-hover sm:aspect-[4/3] lg:aspect-[5/6]">
               <Parallax strength={28} className="absolute inset-[-6%]">
                 <Image
