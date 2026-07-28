@@ -201,7 +201,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                   value={customerName}
                   onChange={(event) => setName(event.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink placeholder:text-ink-faint"
-                  placeholder="e.g. Aline Uwase"
+                  placeholder="e.g. Oreste"
                 />
               </div>
               <div>
@@ -217,7 +217,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                   value={phone}
                   onChange={(event) => setPhone(event.target.value)}
                   className="mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink placeholder:text-ink-faint"
-                  placeholder="e.g. 078 123 4567"
+                  placeholder="+250 783 399 163"
                 />
               </div>
             </div>

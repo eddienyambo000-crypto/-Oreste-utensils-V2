@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { isMissingTableError } from "@/lib/supabase/errors";
 
 /**
  * Saves a contact-form message. Zod-validated, honeypot-guarded, lightly
@@ -69,7 +70,7 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    if (error.code === "42P01") {
+    if (isMissingTableError(error)) {
       return NextResponse.json({ ok: true, mode: "pending-migration" });
     }
     return NextResponse.json(

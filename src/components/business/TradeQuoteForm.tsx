@@ -129,7 +129,7 @@ export function TradeQuoteForm() {
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
             className={fieldClass}
-            placeholder="e.g. Aline Uwase"
+            placeholder="e.g. Oreste"
           />
         </div>
         <div>
@@ -145,7 +145,7 @@ export function TradeQuoteForm() {
             value={phone}
             onChange={(event) => setPhone(event.target.value)}
             className={fieldClass}
-            placeholder="e.g. 078 123 4567"
+            placeholder="+250 783 399 163"
           />
         </div>
       </div>

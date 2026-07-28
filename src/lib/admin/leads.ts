@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isMissingTableError } from "@/lib/supabase/errors";
 import type { Lead } from "@/lib/types";
 
 interface LeadRow {
@@ -38,7 +39,7 @@ export async function fetchLeads(supabase: SupabaseClient): Promise<LeadsResult>
     .order("created_at", { ascending: false });
 
   if (error) {
-    if (error.code === "42P01") return { leads: [], pendingMigration: true };
+    if (isMissingTableError(error)) return { leads: [], pendingMigration: true };
     throw new Error(error.message);
   }
   return { leads: (data as LeadRow[]).map(mapLead), pendingMigration: false };

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isMissingTableError } from "@/lib/supabase/errors";
 import type { Message } from "@/lib/types";
 
 interface MessageRow {
@@ -36,7 +37,7 @@ export async function fetchMessages(
     .order("created_at", { ascending: false });
 
   if (error) {
-    if (error.code === "42P01") return { messages: [], pendingMigration: true };
+    if (isMissingTableError(error)) return { messages: [], pendingMigration: true };
     throw new Error(error.message);
   }
   return { messages: (data as MessageRow[]).map(mapMessage), pendingMigration: false };

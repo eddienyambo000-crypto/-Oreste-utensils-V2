@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { leadInputSchema } from "@/lib/leadSchema";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { isMissingTableError } from "@/lib/supabase/errors";
 
 /**
  * Records a B2B / wholesale trade enquiry. Mirrors the order route: Zod
@@ -71,8 +72,8 @@ export async function POST(request: Request) {
   });
 
   if (error) {
-    // 42P01 = table not created yet. Don't block the WhatsApp handoff.
-    if (error.code === "42P01") {
+    // Table not created yet — don't block the WhatsApp handoff.
+    if (isMissingTableError(error)) {
       return NextResponse.json({ ok: true, mode: "pending-migration" });
     }
     return NextResponse.json(
