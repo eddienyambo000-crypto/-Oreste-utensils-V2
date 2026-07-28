@@ -50,38 +50,36 @@ export default async function HomePage() {
         </div>
 
         {/*
-          One DOM, responsive arrangement:
-          · Mobile (flex column): copy → sliders (middle) → hero image with the
-            "Visit the store" card right beneath the sliders.
-          · Desktop (grid): sliders become a full-width strip on top, then a
-            two-column [copy | image] row underneath.
+          Responsive hero. Mobile is a single flex column in this exact order:
+          copy → sliders → "Shop the collection" → store photo → trust row.
+          On desktop the left blocks (copy / CTA / trust) regroup into one column
+          via `lg:contents`→`lg:flex`, the sliders become a full-width strip on
+          top, and the store photo sits to the right.
         */}
-        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-16 pt-6 sm:px-6 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8 lg:px-8 lg:pb-24 lg:pt-8">
-          {/* Sliders — middle on mobile, full-width top on desktop */}
-          <div className="order-2 lg:order-none lg:col-span-2">
-            <ProductMarquee products={latest} />
-          </div>
+        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-7 px-4 pb-16 pt-6 sm:px-6 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8 lg:px-8 lg:pb-24 lg:pt-8">
+          {/* LEFT COLUMN GROUP — copy, CTA, trust. `contents` on mobile lets its
+              children interleave with the sliders/photo; a real column on lg. */}
+          <div className="contents lg:col-start-1 lg:row-start-2 lg:flex lg:flex-col lg:gap-7">
+            {/* Copy */}
+            <div className="order-1">
+              <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
+                Premium kitchenware · City Plaza, Kigali
+              </p>
+              <h1 className="mt-4 animate-fade-up font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
+                Everything your kitchen{" "}
+                <em className="font-display italic text-copper">deserves.</em>
+              </h1>
+              <p
+                className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-ink-soft"
+                style={{ animationDelay: "120ms" }}
+              >
+                Cookware, dinnerware and the tools that make cooking a pleasure —
+                hand-picked in Kigali, delivered across the city.
+              </p>
+            </div>
 
-          {/* Copy */}
-          <div className="order-1">
-            <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-              Premium kitchenware · City Plaza, Kigali
-            </p>
-            <h1 className="mt-4 animate-fade-up font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
-              Everything your kitchen{" "}
-              <em className="font-display italic text-copper">deserves.</em>
-            </h1>
-            <p
-              className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-ink-soft"
-              style={{ animationDelay: "120ms" }}
-            >
-              Cookware, dinnerware and the tools that make cooking a pleasure —
-              hand-picked in Kigali, delivered across the city.
-            </p>
-            <div
-              className="mt-8 flex flex-wrap items-center gap-4 animate-fade-up"
-              style={{ animationDelay: "220ms" }}
-            >
+            {/* Primary CTA — sits between the sliders and the store photo on mobile */}
+            <div className="order-3 animate-fade-up" style={{ animationDelay: "220ms" }}>
               <Link
                 href="/shop"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
@@ -89,18 +87,11 @@ export default async function HomePage() {
                 Shop the collection
                 <IconArrowRight className="h-4 w-4" />
               </Link>
-              <a
-                href={whatsappLink("Hello Oreste Utensils! I'd like to know more about your kitchenware.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-7 py-3.5 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper active:scale-[0.98]"
-              >
-                <IconWhatsApp className="h-4 w-4" />
-                Chat with us
-              </a>
             </div>
+
+            {/* Trust row */}
             <dl
-              className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-soft animate-fade-up"
+              className="order-5 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-soft animate-fade-up"
               style={{ animationDelay: "320ms" }}
             >
               <div className="flex items-center gap-2">
@@ -126,7 +117,16 @@ export default async function HomePage() {
             </dl>
           </div>
 
-          <div className="relative order-3 mb-5 animate-fade-in lg:mb-0" style={{ animationDelay: "150ms" }}>
+          {/* Sliders — the circled spot on mobile, full-width strip on top for lg */}
+          <div className="order-2 lg:col-span-2 lg:col-start-1 lg:row-start-1">
+            <ProductMarquee products={latest} />
+          </div>
+
+          {/* Store photo + "Visit the store" card */}
+          <div
+            className="relative order-4 mb-5 animate-fade-in lg:col-start-2 lg:row-start-2 lg:mb-0"
+            style={{ animationDelay: "150ms" }}
+          >
             <div className="relative aspect-[5/6] overflow-hidden rounded-3xl shadow-card-hover sm:aspect-[4/3] lg:aspect-[5/6]">
               <Parallax strength={28} className="absolute inset-[-6%]">
                 <Image
