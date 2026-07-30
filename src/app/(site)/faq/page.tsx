@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconChevronDown, IconWhatsApp } from "@/components/ui/icons";
+import { Reveal } from "@/components/ui/Reveal";
 import { FAQS } from "@/lib/faq";
 import { whatsappLink } from "@/lib/whatsapp";
 
@@ -29,32 +30,36 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
-      <header className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-          Good to know
-        </p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-          Delivery, payment &amp; FAQ
-        </h1>
-        <p className="mt-4 leading-relaxed text-ink-soft">
-          The quick answers on ordering, delivery and payment. Anything else, we&apos;re
-          a WhatsApp message away.
-        </p>
-      </header>
+      <Reveal>
+        <header className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
+            Good to know
+          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
+            Delivery, payment &amp; FAQ
+          </h1>
+          <p className="mt-4 leading-relaxed text-ink-soft">
+            The quick answers on ordering, delivery and payment. Anything else, we&apos;re
+            a WhatsApp message away.
+          </p>
+        </header>
+      </Reveal>
 
       <div className="mt-10 divide-y divide-line rounded-2xl border border-line bg-surface">
-        {FAQS.map((faq) => (
-          <details key={faq.question} className="group px-5 py-1 sm:px-6">
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium text-ink [&::-webkit-details-marker]:hidden">
-              {faq.question}
-              <IconChevronDown className="h-5 w-5 shrink-0 text-ink-faint transition-transform duration-200 group-open:rotate-180" />
-            </summary>
-            <p className="pb-5 leading-relaxed text-ink-soft">{faq.answer}</p>
-          </details>
+        {FAQS.map((faq, index) => (
+          <Reveal key={faq.question} delay={index * 45}>
+            <details className="group px-5 py-1 sm:px-6">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium text-ink [&::-webkit-details-marker]:hidden">
+                {faq.question}
+                <IconChevronDown className="h-5 w-5 shrink-0 text-ink-faint transition-transform duration-200 group-open:rotate-180" />
+              </summary>
+              <p className="pb-5 leading-relaxed text-ink-soft">{faq.answer}</p>
+            </details>
+          </Reveal>
         ))}
       </div>
 
-      <div className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-cream/60 px-6 py-10 text-center">
+      <Reveal className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-cream/60 px-6 py-10 text-center">
         <h2 className="font-display text-xl font-semibold">Still have a question?</h2>
         <p className="max-w-sm text-sm text-ink-soft">
           Message us on WhatsApp and a real person will get back to you — usually
@@ -77,7 +82,7 @@ export default function FaqPage() {
             Browse the shop
           </Link>
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

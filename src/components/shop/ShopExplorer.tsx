@@ -57,7 +57,7 @@ export function ShopExplorer({ products, categories }: ShopExplorerProps) {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Category pills */}
         <div
-          className="flex gap-2 overflow-x-auto pb-1 lg:min-w-0 lg:flex-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex gap-2 overflow-x-auto pb-1 lg:min-w-0 lg:flex-1 lg:[mask-image:linear-gradient(to_right,#000_94%,transparent)] [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           role="group"
           aria-label="Filter by category"
         >

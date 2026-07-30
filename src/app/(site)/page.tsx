@@ -97,9 +97,22 @@ export default async function HomePage() {
               <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
                 Premium kitchenware · City Plaza, Kigali
               </p>
-              <h1 className="mt-4 animate-fade-up font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
-                Everything your kitchen{" "}
-                <em className="font-display italic text-copper">deserves.</em>
+              <h1 className="mt-4 font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
+                {["Everything", "your", "kitchen"].map((word, i) => (
+                  <span
+                    key={word}
+                    className="mr-[0.25em] inline-block animate-fade-up"
+                    style={{ animationDelay: `${i * 90}ms` }}
+                  >
+                    {word}
+                  </span>
+                ))}
+                <span
+                  className="inline-block animate-fade-up"
+                  style={{ animationDelay: "270ms" }}
+                >
+                  <em className="font-display italic text-copper">deserves.</em>
+                </span>
               </h1>
               <p
                 className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-ink-soft"
@@ -149,13 +162,17 @@ export default async function HomePage() {
             </dl>
           </div>
 
-          {/* Sliders — the circled spot on mobile, full-width strip on top for lg */}
-          <div className="order-2 lg:col-span-2 lg:col-start-1 lg:row-start-1">
-            <ProductMarquee
-              items={marqueeItems}
-              minItems={usingCuratedSlides ? 1 : 3}
-            />
-          </div>
+          {/* Sliders — the circled spot on mobile, full-width strip on top for lg.
+              Only rendered when there's something to show, so an empty strip
+              never leaves a gap before products/slides are added. */}
+          {marqueeItems.length >= (usingCuratedSlides ? 1 : 3) && (
+            <div className="order-2 lg:col-span-2 lg:col-start-1 lg:row-start-1">
+              <ProductMarquee
+                items={marqueeItems}
+                minItems={usingCuratedSlides ? 1 : 3}
+              />
+            </div>
+          )}
 
           {/* Store photo + "Visit the store" card */}
           <div

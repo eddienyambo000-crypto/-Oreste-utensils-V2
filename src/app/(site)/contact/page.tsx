@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ContactForm } from "@/components/layout/ContactForm";
+import { Reveal } from "@/components/ui/Reveal";
 import {
   IconClock,
   IconInstagram,
@@ -20,24 +21,26 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-      <header className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-          Come say hello
-        </p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-          Visit the store
-        </h1>
-        {/* Consistent NAP block — matches footer, JSON-LD and llms.txt exactly. */}
-        <p className="mt-4 leading-relaxed text-ink-soft">
-          Oreste Utensils is located at {BUSINESS.address.street},{" "}
-          {BUSINESS.address.city}, {BUSINESS.address.country}. We&apos;re open every
-          day from {BUSINESS.hoursDisplay}. Drop in to browse, or reach us on
-          WhatsApp to order for delivery anywhere in Kigali.
-        </p>
-      </header>
+      <Reveal>
+        <header className="max-w-2xl">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
+            Come say hello
+          </p>
+          <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
+            Visit the store
+          </h1>
+          {/* Consistent NAP block — matches footer, JSON-LD and llms.txt exactly. */}
+          <p className="mt-4 leading-relaxed text-ink-soft">
+            Oreste Utensils is located at {BUSINESS.address.street},{" "}
+            {BUSINESS.address.city}, {BUSINESS.address.country}. We&apos;re open every
+            day from {BUSINESS.hoursDisplay}. Drop in to browse, or reach us on
+            WhatsApp to order for delivery anywhere in Kigali.
+          </p>
+        </header>
+      </Reveal>
 
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1.3fr] lg:gap-12">
-        <div className="space-y-4">
+        <Reveal className="space-y-4">
           <a
             href={BUSINESS.mapsUrl}
             target="_blank"
@@ -108,23 +111,45 @@ export default function ContactPage() {
               {BUSINESS.instagramHandle}
             </a>
           </div>
-        </div>
+        </Reveal>
 
-        {/* Map embed — lazy, no tracking cookies until interaction. */}
-        <div className="overflow-hidden rounded-3xl border border-line shadow-card">
+        {/* Map embed — lazy, no tracking cookies until interaction. A branded
+            fallback sits behind it, so if the embed is ever blocked (some
+            browsers block third-party frames) the panel still reads as a
+            deliberate "find us" card instead of an empty box. */}
+        <Reveal
+          delay={120}
+          className="relative min-h-80 overflow-hidden rounded-3xl border border-line shadow-card"
+        >
+          <a
+            href={BUSINESS.mapsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="absolute inset-0 z-0 flex flex-col items-center justify-center gap-3 bg-cream px-6 text-center"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-full bg-copper-tint text-copper">
+              <IconMapPin className="h-6 w-6" />
+            </span>
+            <span className="font-display text-lg font-semibold text-ink">
+              {BUSINESS.address.street}, {BUSINESS.address.city}
+            </span>
+            <span className="text-sm font-medium text-copper">
+              Open in Google Maps →
+            </span>
+          </a>
           <iframe
             title="Oreste Utensils location — City Plaza, Kigali"
             src="https://www.google.com/maps?q=City%20Plaza%2C%20Kigali%2C%20Rwanda&output=embed"
             loading="lazy"
             referrerPolicy="no-referrer-when-downgrade"
-            className="h-full min-h-80 w-full"
+            className="relative z-10 h-full min-h-80 w-full bg-transparent"
           />
-        </div>
+        </Reveal>
       </div>
 
-      <div className="mt-8 max-w-2xl">
+      <Reveal className="mt-8 max-w-2xl">
         <ContactForm />
-      </div>
+      </Reveal>
     </div>
   );
 }
