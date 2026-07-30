@@ -225,12 +225,16 @@ export async function getMarqueeSlides(): Promise<
     if (!Array.isArray(parsed)) return [];
     return parsed
       .filter(
-        (s): s is { url: string; caption?: unknown; link?: unknown } =>
+        (s): s is Record<string, unknown> =>
           !!s && typeof s.url === "string" && s.url.length > 0,
       )
       .map((s) => ({
-        url: s.url,
-        caption: typeof s.caption === "string" && s.caption ? s.caption : undefined,
+        url: s.url as string,
+        name: typeof s.name === "string" && s.name ? s.name : undefined,
+        price:
+          typeof s.price === "number" && Number.isFinite(s.price) && s.price > 0
+            ? s.price
+            : undefined,
         link: typeof s.link === "string" && s.link ? s.link : undefined,
       }));
   } catch {

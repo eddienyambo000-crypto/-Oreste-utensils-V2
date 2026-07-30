@@ -35,8 +35,10 @@ export interface Product {
 /** A hand-picked slide for the homepage scrolling strip. Curated in the admin. */
 export interface MarqueeSlide {
   url: string;
-  /** Optional overlay caption. */
-  caption?: string;
+  /** Product name shown on the slide. */
+  name?: string;
+  /** Price in RWF shown under the name. 0/undefined hides it. */
+  price?: number;
   /** Optional destination when the slide is tapped (e.g. "/shop" or a product URL). */
   link?: string;
 }

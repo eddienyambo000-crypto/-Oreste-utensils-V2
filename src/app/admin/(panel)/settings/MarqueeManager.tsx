@@ -47,7 +47,7 @@ export function MarqueeManager({
       return;
     }
     const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-    setSlides((prev) => [...prev, { url: data.publicUrl, caption: "", link: "" }]);
+    setSlides((prev) => [...prev, { url: data.publicUrl, name: "", price: 0, link: "" }]);
     setUploading(false);
   }
 
@@ -80,7 +80,8 @@ export function MarqueeManager({
     const result = await updateMarqueeSlides(
       slides.map((s) => ({
         url: s.url,
-        caption: s.caption ?? "",
+        name: s.name ?? "",
+        price: s.price ?? 0,
         link: s.link ?? "",
       })),
     );
@@ -100,16 +101,19 @@ export function MarqueeManager({
           Homepage slider photos
         </h2>
         <p className="mt-1 text-sm text-ink-soft">
-          Pick the exact photos that scroll across the top of the homepage. Add
-          a caption or a link if you want. Leave this empty to show your latest
-          products automatically. Remember to <strong>Save changes</strong>.
+          Pick the exact photos that scroll across the top of the homepage, and
+          give each one a <strong>product name</strong> and <strong>price</strong> so
+          they show on the slide. Add a link if you want it to open a page when
+          tapped. Remember to <strong>Save changes</strong>. (If you leave this
+          empty, the strip shows your latest products — but only once you have
+          products with photos, so add slides here to fill it now.)
         </p>
       </div>
 
       {slides.length === 0 ? (
         <p className="rounded-xl border border-dashed border-line bg-cream/60 px-4 py-6 text-center text-sm text-ink-soft">
-          No slider photos yet — the strip is showing your latest products.
-          Upload photos below to curate it yourself.
+          No slider photos yet — the strip on the homepage is empty until you add
+          some here (or add products with photos). Tap <strong>+ Add photo</strong> to start.
         </p>
       ) : (
         <ul className="space-y-3">
@@ -121,7 +125,7 @@ export function MarqueeManager({
               <div className="relative h-20 w-16 shrink-0 overflow-hidden rounded-lg border border-line bg-cream">
                 <Image
                   src={slide.url}
-                  alt={slide.caption || `Slide ${index + 1}`}
+                  alt={slide.name || `Slide ${index + 1}`}
                   fill
                   sizes="64px"
                   className="object-cover"
@@ -129,14 +133,32 @@ export function MarqueeManager({
               </div>
 
               <div className="flex-1 space-y-2">
-                <input
-                  type="text"
-                  value={slide.caption ?? ""}
-                  onChange={(e) => updateSlide(index, { caption: e.target.value })}
-                  placeholder="Caption (optional)"
-                  maxLength={80}
-                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-copper"
-                />
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    type="text"
+                    value={slide.name ?? ""}
+                    onChange={(e) => updateSlide(index, { name: e.target.value })}
+                    placeholder="Product name"
+                    maxLength={120}
+                    className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-copper sm:flex-1"
+                  />
+                  <div className="relative sm:w-40">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      value={slide.price ? String(slide.price) : ""}
+                      onChange={(e) =>
+                        updateSlide(index, { price: Number(e.target.value) || 0 })
+                      }
+                      placeholder="Price"
+                      className="w-full rounded-lg border border-line bg-surface px-3 py-2 pr-12 text-sm text-ink outline-none focus-visible:border-copper"
+                    />
+                    <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs font-medium text-ink-soft">
+                      RWF
+                    </span>
+                  </div>
+                </div>
                 <input
                   type="text"
                   value={slide.link ?? ""}

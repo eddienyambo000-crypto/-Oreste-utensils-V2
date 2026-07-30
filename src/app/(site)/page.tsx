@@ -47,8 +47,9 @@ export default async function HomePage() {
     ? marqueeSlides.map((slide, index) => ({
         key: `slide-${index}`,
         image: slide.url,
-        alt: slide.caption || "Featured at Oreste Utensils",
-        title: slide.caption,
+        alt: slide.name || "Featured at Oreste Utensils",
+        title: slide.name,
+        subtitle: slide.price ? formatRwf(slide.price) : undefined,
         href: slide.link,
       }))
     : products

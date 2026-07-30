@@ -401,7 +401,8 @@ const marqueeSlideSchema = z.object({
     .trim()
     .max(500)
     .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "Invalid image URL."),
-  caption: z.string().trim().max(80).default(""),
+  name: z.string().trim().max(120).default(""),
+  price: z.coerce.number().int().nonnegative().max(100_000_000).default(0),
   link: marqueeLinkSchema.default(""),
 });
 
@@ -421,10 +422,11 @@ export async function updateMarqueeSlides(
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid slides." };
   }
-  // Store compactly — drop empty caption/link keys so getMarqueeSlides stays clean.
+  // Store compactly — drop empty name/price/link keys so getMarqueeSlides stays clean.
   const clean = parsed.data.map((s) => ({
     url: s.url,
-    ...(s.caption ? { caption: s.caption } : {}),
+    ...(s.name ? { name: s.name } : {}),
+    ...(s.price > 0 ? { price: s.price } : {}),
     ...(s.link ? { link: s.link } : {}),
   }));
   const { error } = await supabase
