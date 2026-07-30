@@ -205,6 +205,39 @@ export async function getTestimonials(): Promise<import("./types").Testimonial[]
   }));
 }
 
+/**
+ * Hand-picked homepage slider images, curated by the admin (stored as JSON in
+ * ou_settings). Empty array = fall back to auto (latest products with photos).
+ */
+export async function getMarqueeSlides(): Promise<
+  import("./types").MarqueeSlide[]
+> {
+  if (!isSupabaseConfigured) return [];
+  const { data } = await getPublicClient()
+    .from("ou_settings")
+    .select("value")
+    .eq("key", "marquee_slides")
+    .maybeSingle();
+  const raw = data?.value?.trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(
+        (s): s is { url: string; caption?: unknown; link?: unknown } =>
+          !!s && typeof s.url === "string" && s.url.length > 0,
+      )
+      .map((s) => ({
+        url: s.url,
+        caption: typeof s.caption === "string" && s.caption ? s.caption : undefined,
+        link: typeof s.link === "string" && s.link ? s.link : undefined,
+      }));
+  } catch {
+    return [];
+  }
+}
+
 export type SiteImages = Record<SiteImageKey, string>;
 
 /** Editable site photos — admin overrides from ou_settings, else the bundled defaults. */

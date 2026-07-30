@@ -32,6 +32,15 @@ export interface Product {
   createdAt: string;
 }
 
+/** A hand-picked slide for the homepage scrolling strip. Curated in the admin. */
+export interface MarqueeSlide {
+  url: string;
+  /** Optional overlay caption. */
+  caption?: string;
+  /** Optional destination when the slide is tapped (e.g. "/shop" or a product URL). */
+  link?: string;
+}
+
 export interface CartItem {
   productId: string;
   slug: string;

@@ -15,22 +15,53 @@ import {
   IconTruck,
   IconWhatsApp,
 } from "@/components/ui/icons";
+import type { MarqueeItem } from "@/components/shop/ProductMarquee";
 import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF } from "@/lib/constants";
-import { getCategories, getProducts, getSiteImages, getTestimonials } from "@/lib/data";
+import {
+  getCategories,
+  getMarqueeSlides,
+  getProducts,
+  getSiteImages,
+  getTestimonials,
+} from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const [categories, products, testimonials, siteImages] = await Promise.all([
-    getCategories(),
-    getProducts(),
-    getTestimonials(),
-    getSiteImages(),
-  ]);
+  const [categories, products, testimonials, siteImages, marqueeSlides] =
+    await Promise.all([
+      getCategories(),
+      getProducts(),
+      getTestimonials(),
+      getSiteImages(),
+      getMarqueeSlides(),
+    ]);
   const featured = products.filter((product) => product.featured);
-  const latest = products;
+
+  // The scrolling strip prefers the admin's hand-picked slides; if none are
+  // set it falls back to the latest products that have a photo.
+  const usingCuratedSlides = marqueeSlides.length > 0;
+  const marqueeItems: MarqueeItem[] = usingCuratedSlides
+    ? marqueeSlides.map((slide, index) => ({
+        key: `slide-${index}`,
+        image: slide.url,
+        alt: slide.caption || "Featured at Oreste Utensils",
+        title: slide.caption,
+        href: slide.link,
+      }))
+    : products
+        .filter((product) => product.images[0])
+        .slice(0, 12)
+        .map((product) => ({
+          key: product.id,
+          image: product.images[0],
+          alt: product.name,
+          title: product.name,
+          subtitle: formatRwf(product.priceRwf),
+          href: `/product/${product.slug}`,
+        }));
 
   return (
     <>
@@ -119,7 +150,10 @@ export default async function HomePage() {
 
           {/* Sliders — the circled spot on mobile, full-width strip on top for lg */}
           <div className="order-2 lg:col-span-2 lg:col-start-1 lg:row-start-1">
-            <ProductMarquee products={latest} />
+            <ProductMarquee
+              items={marqueeItems}
+              minItems={usingCuratedSlides ? 1 : 3}
+            />
           </div>
 
           {/* Store photo + "Visit the store" card */}

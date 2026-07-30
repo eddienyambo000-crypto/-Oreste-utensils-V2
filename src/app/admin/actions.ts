@@ -386,6 +386,57 @@ export async function updateSiteImage(
   return { ok: true };
 }
 
+const marqueeLinkSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (v) => v === "" || /^https:\/\//.test(v) || v.startsWith("/"),
+    "Link must start with / or https://",
+  );
+
+const marqueeSlideSchema = z.object({
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "Invalid image URL."),
+  caption: z.string().trim().max(80).default(""),
+  link: marqueeLinkSchema.default(""),
+});
+
+const marqueeSlidesSchema = z.array(marqueeSlideSchema).max(24);
+
+export type MarqueeSlideInput = z.input<typeof marqueeSlideSchema>;
+
+/** Replaces the whole set of curated homepage slider slides. */
+export async function updateMarqueeSlides(
+  slides: MarqueeSlideInput[],
+): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) {
+    return { ok: false, error: "Supabase is not connected." };
+  }
+  const parsed = marqueeSlidesSchema.safeParse(slides);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid slides." };
+  }
+  // Store compactly — drop empty caption/link keys so getMarqueeSlides stays clean.
+  const clean = parsed.data.map((s) => ({
+    url: s.url,
+    ...(s.caption ? { caption: s.caption } : {}),
+    ...(s.link ? { link: s.link } : {}),
+  }));
+  const { error } = await supabase
+    .from("ou_settings")
+    .upsert({ key: "marquee_slides", value: JSON.stringify(clean) });
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/", "layout");
+  revalidatePath("/");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
 /** Sets or clears (null) the brand logo shown in the nav and footer. */
 export async function updateLogoUrl(
   url: string | null,
