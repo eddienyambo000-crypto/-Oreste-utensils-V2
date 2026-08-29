@@ -85,8 +85,9 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
             <IconBag className="h-5 w-5" />
             {count > 0 && (
               <span
+                key={count}
                 aria-hidden
-                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-copper px-1 text-[0.65rem] font-bold tabular-nums text-white"
+                className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 animate-bump items-center justify-center rounded-full bg-copper px-1 text-[0.65rem] font-bold tabular-nums text-white"
               >
                 {count > 99 ? "99+" : count}
               </span>

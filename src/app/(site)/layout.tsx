@@ -1,5 +1,6 @@
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { CartToast } from "@/components/cart/CartToast";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -78,6 +79,7 @@ export default async function SiteLayout({
       <main id="main">{children}</main>
       <Footer logoUrl={logoUrl} />
       <CartDrawer freeDeliveryThreshold={threshold} />
+      <CartToast />
       <WhatsAppButton />
       <MobileNav />
     </CartProvider>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { updateMarqueeSlides } from "@/app/admin/actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { compressImage } from "@/lib/image";
 import type { MarqueeSlide } from "@/lib/types";
 
 /**
@@ -36,11 +37,12 @@ export function MarqueeManager({
     setUploading(true);
     markDirty();
     const supabase = createSupabaseBrowserClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const upload = await compressImage(file);
+    const ext = upload.name.split(".").pop() ?? "webp";
     const path = `marquee/${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(path, file, { cacheControl: "31536000", upsert: false });
+      .upload(path, upload, { cacheControl: "31536000", upsert: false });
     if (uploadError) {
       setError(`Upload failed: ${uploadError.message}`);
       setUploading(false);

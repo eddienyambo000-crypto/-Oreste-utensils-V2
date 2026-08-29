@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { deleteCategory, saveCategory } from "@/app/admin/actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { compressImage } from "@/lib/image";
 import { IconTrash } from "@/components/ui/icons";
 import type { Category } from "@/lib/types";
 
@@ -46,11 +47,12 @@ export function CategoryEditor({ category }: { category?: Category }) {
     setUploading(true);
     setError(null);
     const supabase = createSupabaseBrowserClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const upload = await compressImage(file);
+    const ext = upload.name.split(".").pop() ?? "webp";
     const path = `brand/category-${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(path, file, { cacheControl: "31536000", upsert: false });
+      .upload(path, upload, { cacheControl: "31536000", upsert: false });
     if (uploadError) {
       setError(`Upload failed: ${uploadError.message}`);
       setUploading(false);

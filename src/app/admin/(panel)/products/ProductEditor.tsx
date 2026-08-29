@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { deleteProduct, saveProduct } from "@/app/admin/actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { compressImage } from "@/lib/image";
 import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
 import type { Product } from "@/lib/types";
 
@@ -65,8 +66,9 @@ export function ProductEditor({
     const supabase = createSupabaseBrowserClient();
     const uploaded: string[] = [];
 
-    for (const file of Array.from(files)) {
-      const ext = file.name.split(".").pop() ?? "jpg";
+    for (const original of Array.from(files)) {
+      const file = await compressImage(original);
+      const ext = file.name.split(".").pop() ?? "webp";
       const path = `${slug || slugify(name) || "product"}/${crypto.randomUUID()}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("product-images")

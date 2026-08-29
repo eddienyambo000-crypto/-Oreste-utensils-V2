@@ -40,6 +40,21 @@ export const SITE_URL = (
 /** Orders at or above this subtotal get free delivery across Kigali (RWF). */
 export const FREE_DELIVERY_THRESHOLD_RWF = 500_000;
 
+/**
+ * Indicative delivery fees by Kigali zone (RWF). Shown on the FAQ and at
+ * checkout to answer "what will delivery cost me?" up front. Final fee is
+ * confirmed on WhatsApp by exact location — adjust these to the store's real
+ * rates (they're just edited here, no deploy logic elsewhere depends on them).
+ */
+export const DELIVERY = {
+  zones: [
+    { area: "City centre — Nyarugenge, Muhima, Nyamirambo", fee: 1_500 },
+    { area: "Kacyiru, Kimihurura, Remera, Gisozi, Kimironko, Kibagabaga", fee: 2_000 },
+    { area: "Kicukiro, Gikondo, Gatenga, Niboye", fee: 2_500 },
+    { area: "Gacuriro, Kanombe, Bumbogo & outer Kigali", fee: 3_000 },
+  ],
+} as const;
+
 export const CART_STORAGE_KEY = "oreste-cart-v1";
 
 /**

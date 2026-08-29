@@ -13,6 +13,8 @@ import {
   IconTrash,
   IconWhatsApp,
 } from "@/components/ui/icons";
+import { DeliveryZones } from "@/components/layout/DeliveryZones";
+import { IconChevronDown } from "@/components/ui/icons";
 import { KIGALI_AREAS } from "@/lib/constants";
 import { formatRwf } from "@/lib/format";
 import type { Fulfillment } from "@/lib/types";
@@ -278,6 +280,16 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                   We&apos;ll confirm the exact delivery fee on WhatsApp based on your
                   location{freeDelivery ? " — but this order already qualifies for free delivery." : "."}
                 </p>
+
+                <details className="group mt-3">
+                  <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-copper [&::-webkit-details-marker]:hidden">
+                    See delivery fees by area
+                    <IconChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
+                  </summary>
+                  <div className="mt-3">
+                    <DeliveryZones />
+                  </div>
+                </details>
               </div>
             )}
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { DeliveryZones } from "@/components/layout/DeliveryZones";
 import { IconChevronDown, IconWhatsApp } from "@/components/ui/icons";
 import { Reveal } from "@/components/ui/Reveal";
 import { FAQS } from "@/lib/faq";
@@ -43,6 +44,13 @@ export default function FaqPage() {
             a WhatsApp message away.
           </p>
         </header>
+      </Reveal>
+
+      <Reveal className="mt-8">
+        <h2 className="mb-3 font-display text-lg font-semibold">
+          Delivery across Kigali
+        </h2>
+        <DeliveryZones />
       </Reveal>
 
       <div className="mt-10 divide-y divide-line rounded-2xl border border-line bg-surface">

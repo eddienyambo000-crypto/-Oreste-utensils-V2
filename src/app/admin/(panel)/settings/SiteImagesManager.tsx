@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { updateSiteImage } from "@/app/admin/actions";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { compressImage } from "@/lib/image";
 import { SITE_IMAGE_LABELS, type SiteImageKey } from "@/lib/constants";
 import type { SiteImages } from "@/lib/data";
 
@@ -20,11 +21,12 @@ export function SiteImagesManager({ images }: { images: SiteImages }) {
     setBusyKey(key);
     setError(null);
     const supabase = createSupabaseBrowserClient();
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const upload = await compressImage(file, { maxDim: 2000 });
+    const ext = upload.name.split(".").pop() ?? "webp";
     const path = `site/${key}-${crypto.randomUUID()}.${ext}`;
     const { error: uploadError } = await supabase.storage
       .from("product-images")
-      .upload(path, file, { cacheControl: "31536000", upsert: false });
+      .upload(path, upload, { cacheControl: "31536000", upsert: false });
     if (uploadError) {
       setError(`Upload failed: ${uploadError.message}`);
       setBusyKey(null);
