@@ -2,8 +2,11 @@
 
 import { useState } from "react";
 import { IconArrowRight, IconCheck } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 export function ContactForm() {
+  const { dict } = useLang();
+  const t = dict.contact;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
@@ -46,11 +49,8 @@ export function ContactForm() {
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage/15 text-sage">
           <IconCheck className="h-6 w-6" />
         </span>
-        <h2 className="mt-4 font-display text-xl font-semibold">Message sent</h2>
-        <p className="mt-2 text-ink-soft">
-          Thanks for reaching out — we&apos;ve got your message and will get back to
-          you shortly, usually within opening hours.
-        </p>
+        <h2 className="mt-4 font-display text-xl font-semibold">{t.send}</h2>
+        <p className="mt-2 text-ink-soft">{t.sent}</p>
       </div>
     );
   }
@@ -61,15 +61,13 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-2xl border border-line bg-surface p-6">
       <div>
-        <h2 className="font-display text-xl font-semibold">Send us a message</h2>
-        <p className="mt-1 text-sm text-ink-soft">
-          Fill this in and we&apos;ll get back to you — usually within opening hours.
-        </p>
+        <h2 className="font-display text-xl font-semibold">{t.formTitle}</h2>
+        <p className="mt-1 text-sm text-ink-soft">{t.formLede}</p>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="cf-name" className="text-sm font-medium text-ink">
-            Your name <span className="text-copper">*</span>
+            {t.yourName} <span className="text-copper">*</span>
           </label>
           <input
             id="cf-name"
@@ -79,12 +77,13 @@ export function ContactForm() {
             value={name}
             onChange={(event) => setName(event.target.value)}
             className={fieldClass}
-            placeholder="e.g. Oreste"
+            placeholder={t.namePlaceholder}
           />
         </div>
         <div>
           <label htmlFor="cf-phone" className="text-sm font-medium text-ink">
-            Phone <span className="text-ink-faint">(optional)</span>
+            {t.phoneOptional}{" "}
+            <span className="text-ink-faint">{dict.checkout.optional}</span>
           </label>
           <input
             id="cf-phone"
@@ -100,7 +99,7 @@ export function ContactForm() {
       </div>
       <div>
         <label htmlFor="cf-message" className="text-sm font-medium text-ink">
-          Message <span className="text-copper">*</span>
+          {t.message} <span className="text-copper">*</span>
         </label>
         <textarea
           id="cf-message"
@@ -109,7 +108,7 @@ export function ContactForm() {
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           className={`${fieldClass} resize-y`}
-          placeholder="How can we help?"
+          placeholder={t.messagePlaceholder}
         />
       </div>
 
@@ -138,10 +137,10 @@ export function ContactForm() {
         className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70 sm:w-auto"
       >
         {submitting ? (
-          "Sending…"
+          t.sending
         ) : (
           <>
-            Send message
+            {t.send}
             <IconArrowRight className="h-4 w-4" />
           </>
         )}

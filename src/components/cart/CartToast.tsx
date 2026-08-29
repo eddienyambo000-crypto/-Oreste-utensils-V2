@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useCart } from "./CartProvider";
 import { IconCheck } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 /**
  * Lightweight "added to cart" confirmation. Replaces force-opening the whole
@@ -11,6 +12,7 @@ import { IconCheck } from "@/components/ui/icons";
  */
 export function CartToast() {
   const { toast, openCart, dismissToast } = useCart();
+  const { dict } = useLang();
   if (!toast) return null;
 
   return (
@@ -30,7 +32,7 @@ export function CartToast() {
         <div className="min-w-0 flex-1">
           <p className="flex items-center gap-1 text-xs font-semibold text-sage">
             <IconCheck className="h-3.5 w-3.5" />
-            Added to cart
+            {dict.common.addedToCart}
           </p>
           <p className="truncate text-sm font-medium text-ink">{toast.name}</p>
         </div>
@@ -42,7 +44,7 @@ export function CartToast() {
           }}
           className="shrink-0 cursor-pointer rounded-full bg-copper px-4 py-2 text-xs font-semibold text-white transition-colors duration-200 hover:bg-copper-deep active:scale-95"
         >
-          View cart
+          {dict.common.viewCart}
         </button>
       </div>
     </div>

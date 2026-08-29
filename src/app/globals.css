@@ -70,6 +70,58 @@
   }
 }
 
+/* ── Dark theme ──────────────────────────────────────────────────
+   Warm charcoal ground, not cold black — keeps the editorial feel.
+   Overrides the @theme color vars so every bg and text utility follows.
+   Applied when the OS prefers dark (unless the user forced light) OR when
+   the user explicitly toggles dark. Both blocks carry the same values. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-porcelain: #15120c;
+    --color-cream: #221b12;
+    --color-surface: #201a12;
+    --color-ink: #f4eee2;
+    --color-ink-soft: #b9ad99;
+    --color-ink-faint: #8b8071;
+    --color-copper: #cf7739;
+    --color-copper-deep: #e0864a;
+    --color-copper-tint: #37281b;
+    --color-sage: #9fb07d;
+    --color-line: #322a1e;
+    --color-line-strong: #453a29;
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 18px rgb(0 0 0 / 0.45);
+    --shadow-card-hover: 0 2px 6px rgb(0 0 0 / 0.45), 0 16px 40px rgb(0 0 0 / 0.5);
+    --shadow-drawer: -8px 0 40px rgb(0 0 0 / 0.55);
+  }
+}
+:root[data-theme="dark"] {
+  --color-porcelain: #15120c;
+  --color-cream: #221b12;
+  --color-surface: #201a12;
+  --color-ink: #f4eee2;
+  --color-ink-soft: #b9ad99;
+  --color-ink-faint: #8b8071;
+  --color-copper: #cf7739;
+  --color-copper-deep: #e0864a;
+  --color-copper-tint: #37281b;
+  --color-sage: #9fb07d;
+  --color-line: #322a1e;
+  --color-line-strong: #453a29;
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 6px 18px rgb(0 0 0 / 0.45);
+  --shadow-card-hover: 0 2px 6px rgb(0 0 0 / 0.45), 0 16px 40px rgb(0 0 0 / 0.5);
+  --shadow-drawer: -8px 0 40px rgb(0 0 0 / 0.55);
+}
+
+/* Smooth the flip between themes (but never fight reduced-motion). */
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .bg-surface,
+  .bg-porcelain,
+  .bg-cream {
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+}
+
 html {
   scroll-behavior: smooth;
 }

@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { formatRwf } from "@/lib/format";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 import type { Product } from "@/lib/types";
 
 interface ProductCardProps {
@@ -11,6 +14,7 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ product, categoryName, priority = false }: ProductCardProps) {
+  const { dict } = useLang();
   return (
     <article className="group relative flex flex-col">
       <Link
@@ -28,12 +32,12 @@ export function ProductCard({ product, categoryName, priority = false }: Product
           />
           {!product.inStock && (
             <span className="absolute left-3 top-3 rounded-full bg-ink/80 px-3 py-1 text-xs font-medium text-porcelain backdrop-blur-sm">
-              Out of stock
+              {dict.common.outOfStockBadge}
             </span>
           )}
           {product.featured && product.inStock && (
             <span className="absolute left-3 top-3 rounded-full bg-copper px-3 py-1 text-xs font-medium text-white">
-              Bestseller
+              {dict.common.bestseller}
             </span>
           )}
         </div>

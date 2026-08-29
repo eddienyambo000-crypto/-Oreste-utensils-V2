@@ -5,21 +5,25 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/components/cart/CartProvider";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { IconBag, IconClose, IconMenu } from "@/components/ui/icons";
-
-const NAV_LINKS = [
-  { href: "/shop", label: "Shop" },
-  { href: "/business", label: "For Business" },
-  { href: "/testimonials", label: "Reviews" },
-  { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/contact", label: "Contact" },
-] as const;
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 export function Header({ logoUrl }: { logoUrl?: string | null }) {
   const { count, openCart } = useCart();
+  const { dict } = useLang();
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const NAV_LINKS = [
+    { href: "/shop", label: dict.nav.shop },
+    { href: "/business", label: dict.nav.business },
+    { href: "/testimonials", label: dict.nav.reviews },
+    { href: "/about", label: dict.nav.about },
+    { href: "/faq", label: dict.nav.faq },
+    { href: "/contact", label: dict.nav.contact },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-porcelain/85 backdrop-blur-md">
@@ -75,7 +79,9 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
           </ul>
         </nav>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <LanguageSwitcher />
+          <ThemeToggle />
           <button
             type="button"
             onClick={openCart}

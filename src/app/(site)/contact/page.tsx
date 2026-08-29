@@ -9,6 +9,7 @@ import {
   IconWhatsApp,
 } from "@/components/ui/icons";
 import { BUSINESS } from "@/lib/constants";
+import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -18,23 +19,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const dict = await getDictionary();
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <Reveal>
         <header className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-            Come say hello
+            {dict.contact.eyebrow}
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-            Visit the store
+            {dict.contact.title}
           </h1>
-          {/* Consistent NAP block — matches footer, JSON-LD and llms.txt exactly. */}
           <p className="mt-4 leading-relaxed text-ink-soft">
-            Oreste Utensils is located at {BUSINESS.address.street},{" "}
-            {BUSINESS.address.city}, {BUSINESS.address.country}. We&apos;re open every
-            day from {BUSINESS.hoursDisplay}. Drop in to browse, or reach us on
-            WhatsApp to order for delivery anywhere in Kigali.
+            {BUSINESS.address.street}, {BUSINESS.address.city},{" "}
+            {BUSINESS.address.country}. {dict.contact.intro}
           </p>
         </header>
       </Reveal>
@@ -52,12 +51,12 @@ export default function ContactPage() {
             </span>
             <span>
               <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-                Address
+                {dict.contact.address}
               </span>
               <span className="mt-1 block font-medium text-ink">
                 {BUSINESS.address.street}, {BUSINESS.address.city}, {BUSINESS.address.country}
               </span>
-              <span className="mt-0.5 block text-sm text-copper">Open in Google Maps</span>
+              <span className="mt-0.5 block text-sm text-copper">{dict.common.openInMaps}</span>
             </span>
           </a>
 
@@ -67,7 +66,7 @@ export default function ContactPage() {
             </span>
             <span>
               <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-                Opening hours
+                {dict.contact.hours}
               </span>
               <span className="mt-1 block font-medium text-ink">{BUSINESS.hours.days}</span>
               <span className="mt-0.5 block text-sm text-ink-soft">
@@ -85,7 +84,7 @@ export default function ContactPage() {
             </span>
             <span>
               <span className="block text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-                Phone
+                {dict.contact.phone}
               </span>
               <span className="mt-1 block font-medium text-ink">{BUSINESS.phoneDisplay}</span>
             </span>
@@ -99,7 +98,7 @@ export default function ContactPage() {
               className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               <IconWhatsApp className="h-5 w-5" />
-              Message on WhatsApp
+              {dict.common.messageWhatsapp}
             </a>
             <a
               href={BUSINESS.instagram}
@@ -134,7 +133,7 @@ export default function ContactPage() {
               {BUSINESS.address.street}, {BUSINESS.address.city}
             </span>
             <span className="text-sm font-medium text-copper">
-              Open in Google Maps →
+              {dict.common.openInMaps} →
             </span>
           </a>
           <iframe

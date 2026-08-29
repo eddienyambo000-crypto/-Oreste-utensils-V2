@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BUSINESS } from "@/lib/constants";
+import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { whatsappLink } from "@/lib/whatsapp";
 import {
   IconClock,
@@ -11,7 +12,6 @@ import {
 } from "@/components/ui/icons";
 
 const SHOP_LINKS = [
-  { href: "/shop", label: "All products" },
   { href: "/shop/cookware", label: "Cookware" },
   { href: "/shop/dinnerware", label: "Dinnerware" },
   { href: "/shop/cutlery", label: "Cutlery & Tools" },
@@ -20,14 +20,20 @@ const SHOP_LINKS = [
   { href: "/shop/small-appliances", label: "Small Appliances" },
 ] as const;
 
-const COMPANY_LINKS = [
-  { href: "/about", label: "About Oreste" },
-  { href: "/faq", label: "Delivery & FAQ" },
-  { href: "/contact", label: "Visit the store" },
-  { href: "/cart", label: "Your cart" },
-] as const;
+export function Footer({
+  logoUrl,
+  dict,
+}: {
+  logoUrl?: string | null;
+  dict: Dictionary;
+}) {
+  const companyLinks = [
+    { href: "/about", label: dict.footer.aboutOreste },
+    { href: "/faq", label: dict.footer.deliveryFaq },
+    { href: "/contact", label: dict.footer.visitStore },
+    { href: "/cart", label: dict.footer.yourCart },
+  ];
 
-export function Footer({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <footer className="border-t border-line bg-cream/50">
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
@@ -50,7 +56,7 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
               </p>
             )}
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-ink-soft">
-              {BUSINESS.description}
+              {dict.footer.description}
             </p>
             <div className="mt-5 flex items-center gap-3">
               <a
@@ -76,9 +82,17 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
 
           <nav aria-label="Shop links">
             <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-faint">
-              Shop
+              {dict.footer.shopHeading}
             </h2>
             <ul className="mt-4 space-y-2.5">
+              <li>
+                <Link
+                  href="/shop"
+                  className="text-sm text-ink-soft transition-colors duration-200 hover:text-copper"
+                >
+                  {dict.footer.allProducts}
+                </Link>
+              </li>
               {SHOP_LINKS.map((link) => (
                 <li key={link.href}>
                   <Link
@@ -94,10 +108,10 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
 
           <nav aria-label="Company links">
             <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-faint">
-              Company
+              {dict.footer.companyHeading}
             </h2>
             <ul className="mt-4 space-y-2.5">
-              {COMPANY_LINKS.map((link) => (
+              {companyLinks.map((link) => (
                 <li key={link.href}>
                   <Link
                     href={link.href}
@@ -112,7 +126,7 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
 
           <div>
             <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-faint">
-              Find us
+              {dict.footer.findUsHeading}
             </h2>
             <address className="mt-4 space-y-3 text-sm not-italic text-ink-soft">
               <p className="flex items-start gap-2.5">
@@ -146,26 +160,26 @@ export function Footer({ logoUrl }: { logoUrl?: string | null }) {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-line pt-6 text-xs text-ink-faint sm:flex-row">
           <p>
-            © {new Date().getFullYear()} {BUSINESS.legalName}. All rights reserved.
+            © {new Date().getFullYear()} {BUSINESS.legalName}. {dict.footer.rights}
           </p>
           <nav aria-label="Legal" className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <Link
               href="/privacy"
               className="transition-colors duration-200 hover:text-copper"
             >
-              Privacy Policy
+              {dict.footer.privacy}
             </Link>
             <Link
               href="/terms"
               className="transition-colors duration-200 hover:text-copper"
             >
-              Terms &amp; Conditions
+              {dict.footer.terms}
             </Link>
           </nav>
         </div>
 
         <p className="mt-6 text-center text-xs text-ink-faint">
-          Built by{" "}
+          {dict.footer.builtBy}{" "}
           <a
             href="https://eddie-portfolio-gamma.vercel.app/"
             target="_blank"

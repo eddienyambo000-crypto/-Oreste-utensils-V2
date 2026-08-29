@@ -1,13 +1,17 @@
+"use client";
+
 import { whatsappLink } from "@/lib/whatsapp";
 import { IconWhatsApp } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 export function WhatsAppButton() {
+  const { dict } = useLang();
   return (
     <a
       href={whatsappLink("Hello Oreste Utensils! I have a question about your kitchenware.")}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat with us on WhatsApp"
+      aria-label={dict.common.chatWithUs}
       className="fixed bottom-20 left-5 z-40 flex h-13 w-13 cursor-pointer items-center justify-center rounded-full bg-[#25D366] text-white shadow-card-hover transition-transform duration-200 hover:scale-105 active:scale-95 md:bottom-5"
     >
       <IconWhatsApp className="h-6 w-6" />

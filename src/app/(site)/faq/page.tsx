@@ -4,6 +4,7 @@ import { DeliveryZones } from "@/components/layout/DeliveryZones";
 import { IconChevronDown, IconWhatsApp } from "@/components/ui/icons";
 import { Reveal } from "@/components/ui/Reveal";
 import { FAQS } from "@/lib/faq";
+import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
@@ -13,7 +14,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const dict = await getDictionary();
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -34,21 +36,18 @@ export default function FaqPage() {
       <Reveal>
         <header className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-            Good to know
+            {dict.faq.eyebrow}
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-            Delivery, payment &amp; FAQ
+            {dict.faq.title}
           </h1>
-          <p className="mt-4 leading-relaxed text-ink-soft">
-            The quick answers on ordering, delivery and payment. Anything else, we&apos;re
-            a WhatsApp message away.
-          </p>
+          <p className="mt-4 leading-relaxed text-ink-soft">{dict.faq.intro}</p>
         </header>
       </Reveal>
 
       <Reveal className="mt-8">
         <h2 className="mb-3 font-display text-lg font-semibold">
-          Delivery across Kigali
+          {dict.delivery.heading}
         </h2>
         <DeliveryZones />
       </Reveal>
@@ -68,11 +67,8 @@ export default function FaqPage() {
       </div>
 
       <Reveal className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-cream/60 px-6 py-10 text-center">
-        <h2 className="font-display text-xl font-semibold">Still have a question?</h2>
-        <p className="max-w-sm text-sm text-ink-soft">
-          Message us on WhatsApp and a real person will get back to you — usually
-          within minutes during opening hours.
-        </p>
+        <h2 className="font-display text-xl font-semibold">{dict.faq.stillTitle}</h2>
+        <p className="max-w-sm text-sm text-ink-soft">{dict.faq.stillBody}</p>
         <div className="flex flex-wrap justify-center gap-3">
           <a
             href={whatsappLink("Hello Oreste Utensils! I have a question about ordering.")}
@@ -81,13 +77,13 @@ export default function FaqPage() {
             className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             <IconWhatsApp className="h-5 w-5" />
-            Chat with us
+            {dict.common.chatWithUs}
           </a>
           <Link
             href="/shop"
             className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-6 py-3 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper active:scale-[0.98]"
           >
-            Browse the shop
+            {dict.common.browseShop}
           </Link>
         </div>
       </Reveal>

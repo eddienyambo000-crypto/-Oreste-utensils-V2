@@ -3,6 +3,7 @@
 import { useCart } from "./CartProvider";
 import { productInquiryLink } from "@/lib/whatsapp";
 import { IconBag, IconWhatsApp } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 import type { Product } from "@/lib/types";
 
 interface AddToCartButtonProps {
@@ -12,6 +13,7 @@ interface AddToCartButtonProps {
 
 export function AddToCartButton({ product, size = "default" }: AddToCartButtonProps) {
   const { addItem } = useCart();
+  const { dict } = useLang();
 
   const sizing =
     size === "large"
@@ -27,7 +29,7 @@ export function AddToCartButton({ product, size = "default" }: AddToCartButtonPr
         className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-strong bg-surface font-medium text-ink-soft transition-colors duration-200 hover:border-copper hover:text-copper active:scale-[0.98] ${sizing}`}
       >
         <IconWhatsApp className="h-4 w-4" />
-        Out of stock — ask on WhatsApp
+        {dict.common.outOfStock}
       </a>
     );
   }
@@ -39,7 +41,7 @@ export function AddToCartButton({ product, size = "default" }: AddToCartButtonPr
       className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-copper font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] ${sizing}`}
     >
       <IconBag className="h-4 w-4" />
-      Add to cart
+      {dict.common.addToCart}
     </button>
   );
 }

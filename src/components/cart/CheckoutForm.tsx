@@ -17,6 +17,7 @@ import { DeliveryZones } from "@/components/layout/DeliveryZones";
 import { IconChevronDown } from "@/components/ui/icons";
 import { KIGALI_AREAS } from "@/lib/constants";
 import { formatRwf } from "@/lib/format";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 import type { Fulfillment } from "@/lib/types";
 import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
 
@@ -26,6 +27,8 @@ interface CheckoutFormProps {
 
 export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
   const { items, subtotal, setQuantity, removeItem, clearCart } = useCart();
+  const { dict } = useLang();
+  const t = dict.checkout;
 
   const [customerName, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -44,15 +47,13 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
         <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-cream text-ink-faint">
           <IconBag className="h-6 w-6" />
         </span>
-        <h2 className="mt-5 font-display text-xl font-semibold">Your cart is empty</h2>
-        <p className="mt-2 text-ink-soft">
-          Once you add a few pieces, they&apos;ll show up here ready to order.
-        </p>
+        <h2 className="mt-5 font-display text-xl font-semibold">{t.emptyTitle}</h2>
+        <p className="mt-2 text-ink-soft">{t.emptyBody}</p>
         <Link
           href="/shop"
           className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
         >
-          Browse the shop
+          {dict.common.browseShop}
           <IconArrowRight className="h-4 w-4" />
         </Link>
       </div>
@@ -113,7 +114,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
       <div className="space-y-10">
         <section aria-labelledby="items-heading">
           <h2 id="items-heading" className="font-display text-xl font-semibold">
-            Your items
+            {t.yourItems}
           </h2>
           <ul className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface">
             {items.map((item) => (
@@ -150,7 +151,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                     </button>
                   </div>
                   <p className="mt-0.5 text-sm text-ink-faint">
-                    {formatRwf(item.priceRwf)} each
+                    {formatRwf(item.priceRwf)} {t.each}
                   </p>
                   <div className="mt-auto flex items-center justify-between pt-2">
                     <div className="flex items-center rounded-full border border-line-strong">
@@ -186,14 +187,14 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
 
         <section aria-labelledby="details-heading">
           <h2 id="details-heading" className="font-display text-xl font-semibold">
-            Your details
+            {t.yourDetails}
           </h2>
 
           <div className="mt-4 space-y-5 rounded-2xl border border-line bg-surface p-5 sm:p-6">
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
                 <label htmlFor="name" className="text-sm font-medium text-ink">
-                  Full name <span className="text-copper">*</span>
+                  {t.fullName} <span className="text-copper">*</span>
                 </label>
                 <input
                   id="name"
@@ -208,7 +209,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
               </div>
               <div>
                 <label htmlFor="phone" className="text-sm font-medium text-ink">
-                  Phone / WhatsApp <span className="text-copper">*</span>
+                  {t.phone} <span className="text-copper">*</span>
                 </label>
                 <input
                   id="phone"
@@ -225,12 +226,12 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
             </div>
 
             <fieldset>
-              <legend className="text-sm font-medium text-ink">How would you like it?</legend>
+              <legend className="text-sm font-medium text-ink">{t.howLike}</legend>
               <div className="mt-2 grid gap-3 sm:grid-cols-2">
                 {(
                   [
-                    { value: "delivery", title: "Deliver to me", sub: "Anywhere in Kigali" },
-                    { value: "pickup", title: "I'll collect it", sub: "Free at City Plaza" },
+                    { value: "delivery", title: t.deliverTitle, sub: t.deliverSub },
+                    { value: "pickup", title: t.pickupTitle, sub: t.pickupSub },
                   ] as const
                 ).map((option) => {
                   const active = fulfillment === option.value;
@@ -262,7 +263,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
             {fulfillment === "delivery" && (
               <div>
                 <label htmlFor="area" className="text-sm font-medium text-ink">
-                  Delivery area <span className="text-copper">*</span>
+                  {t.deliveryArea} <span className="text-copper">*</span>
                 </label>
                 <select
                   id="area"
@@ -277,13 +278,13 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                   ))}
                 </select>
                 <p className="mt-1.5 text-xs text-ink-faint">
-                  We&apos;ll confirm the exact delivery fee on WhatsApp based on your
-                  location{freeDelivery ? " — but this order already qualifies for free delivery." : "."}
+                  {t.feeNote}
+                  {freeDelivery ? t.feeNoteFree : "."}
                 </p>
 
                 <details className="group mt-3">
                   <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-copper [&::-webkit-details-marker]:hidden">
-                    See delivery fees by area
+                    {t.seeFees}
                     <IconChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
                   </summary>
                   <div className="mt-3">
@@ -295,7 +296,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
 
             <div>
               <label htmlFor="note" className="text-sm font-medium text-ink">
-                Note <span className="text-ink-faint">(optional)</span>
+                {t.note} <span className="text-ink-faint">{t.optional}</span>
               </label>
               <textarea
                 id="note"
@@ -303,7 +304,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                 value={note}
                 onChange={(event) => setNote(event.target.value)}
                 className="mt-1.5 w-full resize-none rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink placeholder:text-ink-faint"
-                placeholder="Landmark, preferred time, gift wrap…"
+                placeholder={t.notePlaceholder}
               />
             </div>
 
@@ -326,29 +327,29 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
       {/* Right: summary + submit */}
       <div className="lg:sticky lg:top-24 lg:self-start">
         <div className="space-y-5 rounded-2xl border border-line bg-surface p-6">
-          <h2 className="font-display text-xl font-semibold">Order summary</h2>
+          <h2 className="font-display text-xl font-semibold">{t.orderSummary}</h2>
 
           <FreeDeliveryMeter subtotal={subtotal} threshold={freeDeliveryThreshold} />
 
           <dl className="space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <dt className="text-ink-soft">Subtotal</dt>
+              <dt className="text-ink-soft">{dict.cart.subtotal}</dt>
               <dd className="font-medium tabular-nums">{formatRwf(subtotal)}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-ink-soft">Delivery</dt>
+              <dt className="text-ink-soft">{t.delivery}</dt>
               <dd className="font-medium">
                 {fulfillment === "pickup" ? (
-                  "Free pickup"
+                  t.freePickupLabel
                 ) : freeDelivery ? (
-                  <span className="text-sage">Free</span>
+                  <span className="text-sage">{dict.common.free}</span>
                 ) : (
-                  <span className="text-ink-faint">Confirmed on WhatsApp</span>
+                  <span className="text-ink-faint">{t.confirmedWhatsapp}</span>
                 )}
               </dd>
             </div>
             <div className="flex justify-between border-t border-line pt-3 text-base">
-              <dt className="font-semibold">Total</dt>
+              <dt className="font-semibold">{t.total}</dt>
               <dd className="font-display text-lg font-semibold tabular-nums">
                 {formatRwf(subtotal)}
               </dd>
@@ -370,19 +371,17 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
             className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-4 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
           >
             {submitting ? (
-              "Placing order…"
+              t.placing
             ) : (
               <>
                 <IconWhatsApp className="h-5 w-5" />
-                Place order via WhatsApp
+                {t.placeOrder}
               </>
             )}
           </button>
 
           <p className="text-center text-xs leading-relaxed text-ink-faint">
-            We&apos;ll open WhatsApp with your order ready to send, then confirm
-            everything and arrange payment — cash or MoMo on delivery. No online
-            payment needed.
+            {t.finePrint}
           </p>
         </div>
       </div>

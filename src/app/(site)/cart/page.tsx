@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CheckoutForm } from "@/components/cart/CheckoutForm";
 import { getFreeDeliveryThreshold } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Your Cart & Checkout",
@@ -11,18 +12,18 @@ export const metadata: Metadata = {
 };
 
 export default async function CartPage() {
-  const threshold = await getFreeDeliveryThreshold();
+  const [threshold, dict] = await Promise.all([
+    getFreeDeliveryThreshold(),
+    getDictionary(),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
       <header>
         <h1 className="font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-          Your cart
+          {dict.checkout.title}
         </h1>
-        <p className="mt-3 text-ink-soft">
-          Almost there. Confirm your order below and we&apos;ll take it from here on
-          WhatsApp.
-        </p>
+        <p className="mt-3 text-ink-soft">{dict.checkout.lede}</p>
       </header>
 
       <div className="mt-10">

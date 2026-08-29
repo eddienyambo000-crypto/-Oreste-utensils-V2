@@ -2,15 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { ProductCard } from "./ProductCard";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 import type { Category, Product } from "@/lib/types";
 
 type SortKey = "newest" | "price-asc" | "price-desc";
-
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "newest", label: "Newest first" },
-  { value: "price-asc", label: "Price: low to high" },
-  { value: "price-desc", label: "Price: high to low" },
-];
 
 interface ShopExplorerProps {
   products: Product[];
@@ -18,9 +13,16 @@ interface ShopExplorerProps {
 }
 
 export function ShopExplorer({ products, categories }: ShopExplorerProps) {
+  const { dict } = useLang();
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [sort, setSort] = useState<SortKey>("newest");
   const [query, setQuery] = useState("");
+
+  const SORT_OPTIONS: { value: SortKey; label: string }[] = [
+    { value: "newest", label: dict.shop.sortNewest },
+    { value: "price-asc", label: dict.shop.sortPriceAsc },
+    { value: "price-desc", label: dict.shop.sortPriceDesc },
+  ];
 
   const categoryNames = useMemo(
     () => new Map(categories.map((c) => [c.slug, c.name])),
@@ -61,7 +63,7 @@ export function ShopExplorer({ products, categories }: ShopExplorerProps) {
           role="group"
           aria-label="Filter by category"
         >
-          {[{ slug: "all", name: "All" }, ...categories].map((category) => {
+          {[{ slug: "all", name: dict.shop.all }, ...categories].map((category) => {
             const active = activeCategory === category.slug;
             return (
               <button
@@ -88,7 +90,7 @@ export function ShopExplorer({ products, categories }: ShopExplorerProps) {
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search products…"
+              placeholder={dict.shop.searchPlaceholder}
               className="w-full rounded-full border border-line-strong bg-surface px-4 py-2 text-sm text-ink placeholder:text-ink-faint sm:w-56"
             />
           </label>
@@ -110,16 +112,13 @@ export function ShopExplorer({ products, categories }: ShopExplorerProps) {
       </div>
 
       <p className="mt-5 text-sm text-ink-faint" aria-live="polite">
-        {visible.length} {visible.length === 1 ? "product" : "products"}
+        {visible.length} {visible.length === 1 ? dict.shop.countOne : dict.shop.countMany}
       </p>
 
       {visible.length === 0 ? (
         <div className="mt-10 rounded-2xl border border-dashed border-line-strong bg-surface px-6 py-16 text-center">
-          <p className="font-medium text-ink">Nothing matches that search.</p>
-          <p className="mt-1 text-sm text-ink-soft">
-            Try a different word, or clear the filters — or ask us on WhatsApp,
-            we may have it in store.
-          </p>
+          <p className="font-medium text-ink">{dict.shop.noMatchTitle}</p>
+          <p className="mt-1 text-sm text-ink-soft">{dict.shop.noMatchBody}</p>
         </div>
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">

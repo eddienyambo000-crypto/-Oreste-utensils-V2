@@ -2,6 +2,7 @@
 
 import { formatRwf } from "@/lib/format";
 import { IconCheck, IconTruck } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 interface FreeDeliveryMeterProps {
   subtotal: number;
@@ -9,6 +10,7 @@ interface FreeDeliveryMeterProps {
 }
 
 export function FreeDeliveryMeter({ subtotal, threshold }: FreeDeliveryMeterProps) {
+  const { dict } = useLang();
   const reached = subtotal >= threshold;
   const progress = Math.min(subtotal / threshold, 1);
   const remaining = threshold - subtotal;
@@ -23,17 +25,15 @@ export function FreeDeliveryMeter({ subtotal, threshold }: FreeDeliveryMeterProp
         {reached ? (
           <>
             <IconCheck className="h-4 w-4 shrink-0 text-sage" />
-            <p className="font-medium text-ink">
-              You&apos;ve unlocked <span className="text-sage">free delivery</span> across
-              Kigali.
-            </p>
+            <p className="font-medium text-sage">{dict.cart.meterReached}</p>
           </>
         ) : (
           <>
             <IconTruck className="h-4 w-4 shrink-0 text-copper" />
             <p className="text-ink-soft">
-              Add <span className="font-semibold text-ink">{formatRwf(remaining)}</span> more
-              for free delivery.
+              {dict.cart.meterAddPre}{" "}
+              <span className="font-semibold text-ink">{formatRwf(remaining)}</span>{" "}
+              {dict.cart.meterAddPost}
             </p>
           </>
         )}

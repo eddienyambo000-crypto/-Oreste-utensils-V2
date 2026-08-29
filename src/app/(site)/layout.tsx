@@ -7,6 +7,8 @@ import { Footer } from "@/components/layout/Footer";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { WhatsAppButton } from "@/components/layout/WhatsAppButton";
 import { getFreeDeliveryThreshold, getLogoUrl } from "@/lib/data";
+import { LanguageProvider } from "@/lib/i18n/LanguageProvider";
+import { getDictionary, getLocale } from "@/lib/i18n/server";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
 
 function StoreJsonLd() {
@@ -60,28 +62,32 @@ function StoreJsonLd() {
 export default async function SiteLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [threshold, logoUrl] = await Promise.all([
+  const [threshold, logoUrl, locale, dict] = await Promise.all([
     getFreeDeliveryThreshold(),
     getLogoUrl(),
+    getLocale(),
+    getDictionary(),
   ]);
 
   return (
-    <CartProvider>
-      <StoreJsonLd />
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-full focus:bg-ink focus:px-5 focus:py-2.5 focus:text-sm focus:text-porcelain"
-      >
-        Skip to main content
-      </a>
-      <AnnouncementBar threshold={threshold} />
-      <Header logoUrl={logoUrl} />
-      <main id="main">{children}</main>
-      <Footer logoUrl={logoUrl} />
-      <CartDrawer freeDeliveryThreshold={threshold} />
-      <CartToast />
-      <WhatsAppButton />
-      <MobileNav />
-    </CartProvider>
+    <LanguageProvider locale={locale}>
+      <CartProvider>
+        <StoreJsonLd />
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-100 focus:rounded-full focus:bg-ink focus:px-5 focus:py-2.5 focus:text-sm focus:text-porcelain"
+        >
+          Skip to main content
+        </a>
+        <AnnouncementBar threshold={threshold} dict={dict} />
+        <Header logoUrl={logoUrl} />
+        <main id="main">{children}</main>
+        <Footer logoUrl={logoUrl} dict={dict} />
+        <CartDrawer freeDeliveryThreshold={threshold} />
+        <CartToast />
+        <WhatsAppButton />
+        <MobileNav />
+      </CartProvider>
+    </LanguageProvider>
   );
 }

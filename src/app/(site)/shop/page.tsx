@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { ShopExplorer } from "@/components/shop/ShopExplorer";
 import { Reveal } from "@/components/ui/Reveal";
 import { getCategories, getProducts } from "@/lib/data";
-
-export const revalidate = 300;
+import { getDictionary } from "@/lib/i18n/server";
 
 export const metadata: Metadata = {
   title: "Shop Kitchenware in Kigali",
@@ -13,9 +12,10 @@ export const metadata: Metadata = {
 };
 
 export default async function ShopPage() {
-  const [products, categories] = await Promise.all([
+  const [products, categories, dict] = await Promise.all([
     getProducts(),
     getCategories(),
+    getDictionary(),
   ]);
 
   return (
@@ -23,15 +23,12 @@ export default async function ShopPage() {
       <Reveal>
         <header className="max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-            The full collection
+            {dict.shop.eyebrow}
           </p>
           <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-            Shop kitchenware
+            {dict.shop.title}
           </h1>
-          <p className="mt-4 leading-relaxed text-ink-soft">
-            Every piece we stock at City Plaza, Kigali — from forged knives to
-            countertop appliances. Order online, pay cash or MoMo when it arrives.
-          </p>
+          <p className="mt-4 leading-relaxed text-ink-soft">{dict.shop.intro}</p>
         </header>
       </Reveal>
 

@@ -14,9 +14,11 @@ import {
   IconPlus,
   IconTrash,
 } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
 export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: number }) {
   const { items, subtotal, isOpen, closeCart, setQuantity, removeItem } = useCart();
+  const { dict } = useLang();
   const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -83,13 +85,13 @@ export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: n
       >
         <div className="flex items-center justify-between border-b border-line px-5 py-4">
           <h2 className="font-display text-lg font-semibold tracking-tight">
-            Your cart
+            {dict.cart.title}
           </h2>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={closeCart}
-            aria-label="Close cart"
+            aria-label={dict.cart.close}
             className="cursor-pointer rounded-full p-2 text-ink-soft transition-colors duration-200 hover:bg-cream hover:text-ink active:scale-95"
           >
             <IconClose className="h-5 w-5" />
@@ -101,13 +103,13 @@ export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: n
             <span className="flex h-14 w-14 items-center justify-center rounded-full bg-cream text-ink-faint">
               <IconBag className="h-6 w-6" />
             </span>
-            <p className="text-ink-soft">Your cart is empty — for now.</p>
+            <p className="text-ink-soft">{dict.cart.empty}</p>
             <Link
               href="/shop"
               onClick={closeCart}
               className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-medium text-porcelain transition-colors duration-200 hover:bg-copper-deep active:scale-[0.98]"
             >
-              Browse the shop
+              {dict.common.browseShop}
               <IconArrowRight className="h-4 w-4" />
             </Link>
           </div>
@@ -185,7 +187,7 @@ export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: n
             <div className="space-y-4 border-t border-line bg-surface px-5 py-5">
               <FreeDeliveryMeter subtotal={subtotal} threshold={freeDeliveryThreshold} />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-ink-soft">Subtotal</span>
+                <span className="text-sm text-ink-soft">{dict.cart.subtotal}</span>
                 <span className="font-display text-lg font-semibold tabular-nums">
                   {formatRwf(subtotal)}
                 </span>
@@ -195,11 +197,11 @@ export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: n
                 onClick={closeCart}
                 className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
               >
-                Review order &amp; checkout
+                {dict.cart.checkout}
                 <IconArrowRight className="h-4 w-4" />
               </Link>
               <p className="text-center text-xs text-ink-faint">
-                Pay cash or MoMo on delivery — nothing online.
+                {dict.cart.payNote}
               </p>
             </div>
           </>

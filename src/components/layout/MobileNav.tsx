@@ -6,20 +6,16 @@ import {
   InteractiveMenu,
   type InteractiveMenuItem,
 } from "@/components/ui/modern-mobile-menu";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 
-const ITEMS: InteractiveMenuItem[] = [
-  { label: "Home", icon: Home, href: "/" },
-  { label: "Shop", icon: ShoppingBag, href: "/shop" },
-  { label: "Business", icon: Store, href: "/business" },
-  { label: "Reviews", icon: Star, href: "/testimonials" },
-  { label: "Contact", icon: Phone, href: "/contact" },
-];
-
-function activeIndexForPath(pathname: string): number {
+function activeIndexForPath(
+  items: InteractiveMenuItem[],
+  pathname: string,
+): number {
   // Longest prefix match, but keep Home exact.
   let best = 0;
   let bestLen = -1;
-  ITEMS.forEach((item, index) => {
+  items.forEach((item, index) => {
     if (!item.href) return;
     const match =
       item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -34,16 +30,25 @@ function activeIndexForPath(pathname: string): number {
 export function MobileNav() {
   const pathname = usePathname();
   const router = useRouter();
+  const { dict } = useLang();
 
   // Hide on admin routes.
   if (pathname.startsWith("/admin")) return null;
 
+  const items: InteractiveMenuItem[] = [
+    { label: dict.nav.home, icon: Home, href: "/" },
+    { label: dict.nav.shop, icon: ShoppingBag, href: "/shop" },
+    { label: dict.nav.business, icon: Store, href: "/business" },
+    { label: dict.nav.reviews, icon: Star, href: "/testimonials" },
+    { label: dict.nav.contact, icon: Phone, href: "/contact" },
+  ];
+
   return (
     <div className="md:hidden" aria-hidden={false}>
       <InteractiveMenu
-        items={ITEMS}
+        items={items}
         accentColor="var(--color-copper)"
-        activeIndex={activeIndexForPath(pathname)}
+        activeIndex={activeIndexForPath(items, pathname)}
         onSelect={(_, item) => item.href && router.push(item.href)}
       />
     </div>

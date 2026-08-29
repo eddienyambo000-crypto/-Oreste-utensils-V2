@@ -5,9 +5,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { IconArrowRight, IconWhatsApp } from "@/components/ui/icons";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
 import { getTestimonials } from "@/lib/data";
+import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
-
-export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "What Our Clients Say",
@@ -17,7 +16,10 @@ export const metadata: Metadata = {
 };
 
 export default async function TestimonialsPage() {
-  const testimonials = await getTestimonials();
+  const [testimonials, dict] = await Promise.all([
+    getTestimonials(),
+    getDictionary(),
+  ]);
 
   const reviewJsonLd =
     testimonials.length > 0
@@ -50,15 +52,12 @@ export default async function TestimonialsPage() {
 
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-          What our clients say
+          {dict.reviews.eyebrow}
         </p>
         <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-          Kigali kitchens we&apos;ve kitted out.
+          {dict.reviews.title}
         </h1>
-        <p className="mt-4 leading-relaxed text-ink-soft">
-          From family kitchens to busy restaurant lines, here&apos;s what people say
-          after ordering from Oreste Utensils.
-        </p>
+        <p className="mt-4 leading-relaxed text-ink-soft">{dict.reviews.intro}</p>
       </header>
 
       {testimonials.length > 0 ? (
@@ -71,9 +70,7 @@ export default async function TestimonialsPage() {
         </div>
       ) : (
         <div className="mt-10 rounded-3xl border border-dashed border-line-strong bg-surface px-6 py-16 text-center">
-          <p className="text-ink-soft">
-            Fresh reviews are on the way. In the meantime, come see us or say hello.
-          </p>
+          <p className="text-ink-soft">{dict.reviews.emptyBody}</p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <a
               href={whatsappLink("Hello Oreste Utensils!")}
@@ -82,13 +79,13 @@ export default async function TestimonialsPage() {
               className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
             >
               <IconWhatsApp className="h-5 w-5" />
-              Chat with us
+              {dict.common.chatWithUs}
             </a>
             <Link
               href="/shop"
               className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-6 py-3 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
             >
-              Browse the shop
+              {dict.common.browseShop}
               <IconArrowRight className="h-4 w-4" />
             </Link>
           </div>

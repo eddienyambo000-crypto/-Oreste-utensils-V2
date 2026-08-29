@@ -62,10 +62,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="flex min-h-full flex-col">
-        {/* Marks JS availability so scroll-reveal styles only hide content when they can un-hide it. */}
+        {/* Applies the saved theme before paint (no flash) and marks JS
+            availability so scroll-reveal styles only hide content when they
+            can un-hide it. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: "document.documentElement.classList.add('js')",
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}document.documentElement.classList.add('js');})();",
           }}
         />
         {children}

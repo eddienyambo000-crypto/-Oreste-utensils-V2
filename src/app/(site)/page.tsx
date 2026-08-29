@@ -25,19 +25,20 @@ import {
   getTestimonials,
 } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
+import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
 
-export const revalidate = 300;
-
 export default async function HomePage() {
-  const [categories, products, testimonials, siteImages, marqueeSlides] =
+  const [categories, products, testimonials, siteImages, marqueeSlides, dict] =
     await Promise.all([
       getCategories(),
       getProducts(),
       getTestimonials(),
       getSiteImages(),
       getMarqueeSlides(),
+      getDictionary(),
     ]);
+  const t = dict.home;
   const featured = products.filter((product) => product.featured);
 
   // The scrolling strip prefers the admin's hand-picked slides; if none are
@@ -95,12 +96,12 @@ export default async function HomePage() {
             {/* Copy */}
             <div className="order-1">
               <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                Premium kitchenware · City Plaza, Kigali
+                {dict.hero.eyebrow}
               </p>
               <h1 className="mt-4 font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
-                {["Everything", "your", "kitchen"].map((word, i) => (
+                {dict.hero.titleLead.split(" ").map((word, i) => (
                   <span
-                    key={word}
+                    key={`${word}-${i}`}
                     className="mr-[0.25em] inline-block animate-fade-up"
                     style={{ animationDelay: `${i * 90}ms` }}
                   >
@@ -109,17 +110,20 @@ export default async function HomePage() {
                 ))}
                 <span
                   className="inline-block animate-fade-up"
-                  style={{ animationDelay: "270ms" }}
+                  style={{
+                    animationDelay: `${dict.hero.titleLead.split(" ").length * 90}ms`,
+                  }}
                 >
-                  <em className="font-display italic text-copper">deserves.</em>
+                  <em className="font-display italic text-copper">
+                    {dict.hero.titleEm}
+                  </em>
                 </span>
               </h1>
               <p
                 className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-ink-soft"
                 style={{ animationDelay: "120ms" }}
               >
-                Cookware, dinnerware and the tools that make cooking a pleasure —
-                hand-picked in Kigali, delivered across the city.
+                {dict.hero.subtitle}
               </p>
             </div>
 
@@ -129,7 +133,7 @@ export default async function HomePage() {
                 href="/shop"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
               >
-                Shop the collection
+                {dict.hero.cta}
                 <IconArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -143,7 +147,7 @@ export default async function HomePage() {
                 <IconTruck className="h-4 w-4 text-copper" />
                 <dt className="sr-only">Delivery</dt>
                 <dd>
-                  Free delivery over{" "}
+                  {dict.hero.trustDelivery}{" "}
                   <span className="font-semibold text-ink">
                     {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}
                   </span>
@@ -152,12 +156,12 @@ export default async function HomePage() {
               <div className="flex items-center gap-2">
                 <IconShield className="h-4 w-4 text-copper" />
                 <dt className="sr-only">Payment</dt>
-                <dd>Pay on delivery — cash or MoMo</dd>
+                <dd>{dict.hero.trustPayment}</dd>
               </div>
               <div className="flex items-center gap-2">
                 <IconStore className="h-4 w-4 text-copper" />
                 <dt className="sr-only">Store</dt>
-                <dd>Open daily, 8 AM – 9 PM</dd>
+                <dd>{dict.hero.trustOpen}</dd>
               </div>
             </dl>
           </div>
@@ -193,7 +197,7 @@ export default async function HomePage() {
             </div>
             <div className="absolute -bottom-5 left-6 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-card-hover backdrop-blur-sm">
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-                Visit the store
+                {dict.hero.visitCard}
               </p>
               <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink">
                 <IconMapPin className="h-4 w-4 text-copper" />
@@ -211,20 +215,20 @@ export default async function HomePage() {
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                  The collection
+                  {t.categoriesEyebrow}
                 </p>
                 <h2
                   id="categories-heading"
                   className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                 >
-                  Shop by room in the kitchen
+                  {t.categoriesTitle}
                 </h2>
               </div>
               <Link
                 href="/shop"
                 className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
               >
-                View all products
+                {dict.common.viewAllProducts}
                 <IconArrowRight className="h-4 w-4" />
               </Link>
             </div>
@@ -277,13 +281,13 @@ export default async function HomePage() {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                    Customer favourites
+                    {t.featuredEyebrow}
                   </p>
                   <h2
                     id="featured-heading"
                     className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                   >
-                    The pieces Kigali keeps coming back for
+                    {t.featuredTitle}
                   </h2>
                 </div>
               </div>
@@ -304,29 +308,29 @@ export default async function HomePage() {
       <section aria-labelledby="promise-heading" className="border-y border-line bg-surface py-14 lg:py-16">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h2 id="promise-heading" className="sr-only">
-            Why shop with Oreste Utensils
+            {t.guaranteesTitle}
           </h2>
           <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
             {[
               {
                 icon: IconShield,
-                title: "Inspect before you pay",
-                body: "Check your order at the door. Not right? Don't pay for it.",
+                title: t.guarantees.inspectT,
+                body: t.guarantees.inspectB,
               },
               {
                 icon: IconTruck,
-                title: "Free delivery over 500K",
-                body: "Across Kigali. Below that, a small fee confirmed upfront.",
+                title: t.guarantees.deliveryT,
+                body: t.guarantees.deliveryB,
               },
               {
                 icon: IconStore,
-                title: "A real store, real stock",
-                body: "Come see and hold everything at City Plaza, open daily.",
+                title: t.guarantees.storeT,
+                body: t.guarantees.storeB,
               },
               {
                 icon: IconCheck,
-                title: "7-day exchange",
-                body: "Something off after delivery? We swap it, no drama.",
+                title: t.guarantees.exchangeT,
+                body: t.guarantees.exchangeB,
               },
             ].map((item) => (
               <div key={item.title}>
@@ -349,18 +353,16 @@ export default async function HomePage() {
               <div className="relative grid items-center gap-8 lg:grid-cols-[1.5fr_1fr]">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-tint">
-                    Oreste for Business
+                    {t.b2bEyebrow}
                   </p>
                   <h2
                     id="b2b-heading"
                     className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] text-porcelain sm:text-4xl"
                   >
-                    Run a restaurant or hotel? Buy at trade prices.
+                    {t.b2bTitle}
                   </h2>
                   <p className="mt-4 max-w-xl leading-relaxed text-porcelain/70">
-                    We supply Kigali&apos;s restaurants, hotels, cafés and
-                    institutions with cookware, tableware and cutlery — one
-                    supplier, wholesale pricing, consistent restock, delivered.
+                    {t.b2bBody}
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
@@ -368,7 +370,7 @@ export default async function HomePage() {
                     href="/business"
                     className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
                   >
-                    Get wholesale pricing
+                    {t.b2bCta}
                     <IconArrowRight className="h-4 w-4" />
                   </Link>
                 </div>
@@ -405,27 +407,19 @@ export default async function HomePage() {
           </Reveal>
           <Reveal delay={100}>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-tint">
-              Why Oreste
+              {t.storyEyebrow}
             </p>
             <h2
               id="story-heading"
               className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] text-porcelain sm:text-4xl"
             >
-              Good tools change how you cook.
+              {t.storyTitle}
             </h2>
             <p className="mt-5 max-w-lg leading-relaxed text-porcelain/70">
-              A pan that heats evenly. A knife that stays sharp. A plate that makes
-              Tuesday dinner feel considered. We test everything we stock in real
-              kitchens before it earns a place on our shelves — because in Kigali,
-              quality kitchenware shouldn&apos;t require an import errand.
+              {t.storyBody}
             </p>
             <ul className="mt-8 space-y-4">
-              {[
-                "Hand-picked ranges — no filler stock, no fakes",
-                "Fair Kigali prices, in RWF, no surprises",
-                "See and touch everything at our City Plaza store",
-                "Same-week delivery anywhere in Kigali",
-              ].map((point) => (
+              {t.storyPoints.map((point) => (
                 <li key={point} className="flex items-start gap-3 text-porcelain/85">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-copper" aria-hidden />
                   {point}
@@ -436,7 +430,7 @@ export default async function HomePage() {
               href="/about"
               className="mt-9 inline-flex cursor-pointer items-center gap-2 rounded-full border border-porcelain/25 px-6 py-3 text-sm font-medium text-porcelain transition-colors duration-200 hover:border-copper hover:text-copper-tint active:scale-[0.98]"
             >
-              Our story
+              {t.storyCta}
               <IconArrowRight className="h-4 w-4" />
             </Link>
           </Reveal>
@@ -448,18 +442,16 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
           <Reveal>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-              In person
+              {t.visitEyebrow}
             </p>
             <h2
               id="visit-heading"
               className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
             >
-              Come hold it in your hands.
+              {t.visitTitle}
             </h2>
             <p className="mt-5 max-w-md leading-relaxed text-ink-soft">
-              Photos only get you so far — the weight of a good knife has to be
-              felt. Find us at {BUSINESS.address.street} in the heart of Kigali,
-              open every single day.
+              {t.visitBody}
             </p>
             <div className="mt-8 space-y-4 text-sm">
               <p className="flex items-center gap-3">
@@ -518,20 +510,20 @@ export default async function HomePage() {
               <div className="flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                    What our clients say
+                    {t.reviewsEyebrow}
                   </p>
                   <h2
                     id="reviews-heading"
                     className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
                   >
-                    Trusted in kitchens across Kigali
+                    {t.reviewsTitle}
                   </h2>
                 </div>
                 <Link
                   href="/testimonials"
                   className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
                 >
-                  Read more reviews
+                  {t.reviewsMore}
                   <IconArrowRight className="h-4 w-4" />
                 </Link>
               </div>
@@ -552,18 +544,17 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl bg-copper px-6 py-14 text-center text-white sm:px-12">
             <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-              Your kitchen deserves better. Start today.
+              {t.closingTitle}
             </h2>
             <p className="mx-auto mt-4 max-w-md text-white/80">
-              Browse the collection, order in minutes, and pay on delivery. Free
-              across Kigali over {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}.
+              {t.closingBody} {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-4">
               <Link
                 href="/shop"
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-7 py-3.5 font-medium text-porcelain transition-[background-color,transform] duration-200 hover:bg-ink/85 active:scale-[0.98]"
               >
-                Shop the collection
+                {dict.hero.cta}
                 <IconArrowRight className="h-4 w-4" />
               </Link>
               <a
@@ -573,7 +564,7 @@ export default async function HomePage() {
                 className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 font-medium text-white transition-colors duration-200 hover:bg-white/10 active:scale-[0.98]"
               >
                 <IconWhatsApp className="h-4 w-4" />
-                Order on WhatsApp
+                {dict.common.orderOnWhatsapp}
               </a>
             </div>
           </div>
