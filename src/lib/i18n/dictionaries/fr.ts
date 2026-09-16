@@ -213,9 +213,124 @@ export const fr: Dictionary = {
   },
   about: {
     eyebrow: "Notre histoire",
+    title: "Les cuisines de Kigali méritent de meilleurs outils.",
+    lead: "Oreste Utensils est une marque et boutique d'ustensiles de cuisine haut de gamme située à City Plaza, Kigali, au Rwanda. Nous fournissons des essentiels de maison et de cuisine modernes et exclusifs — ustensiles de cuisson, vaisselle, couverts, verrerie, rangement et petit électroménager — aux foyers et aux entreprises de tout Kigali.",
+    para2:
+      "Nous sommes partis d'une frustration simple : trouver de la vraie bonne vaisselle à Kigali passait souvent par une commande à l'étranger ou un compromis décevant. Alors nous avons créé la boutique où nous aurions voulu acheter — des gammes soigneusement choisies, des prix honnêtes en francs rwandais, et une équipe qui cuisine vraiment et sait vous dire ce qui en vaut la peine.",
+    imageAlt: "Un couple comparant de la vaisselle de qualité chez Oreste Utensils",
+    values: [
+      {
+        t: "Une vraie boutique, du vrai stock",
+        b: "Nous ne sommes pas une page de dropshipping. Tout ce que nous vendons se trouve sur nos étagères à City Plaza, où vous pouvez le prendre en main et sentir la qualité avant d'acheter.",
+      },
+      {
+        t: "Sélectionné, pas encombré",
+        b: "Nous préférons stocker cinquante articles qui valent le coup plutôt que cinq cents qui n'en valent pas. Chaque pièce est choisie pour sa performance dans une vraie cuisine de Kigali.",
+      },
+      {
+        t: "Kigali, livré",
+        b: "Commandez en ligne et nous vous livrons partout dans la ville — gratuit au-delà de 500 000 RWF. Payez à la réception, en espèces ou par MoMo.",
+      },
+    ],
+    ctaTitle: "Prêt à équiper votre cuisine ?",
+    ctaBody:
+      "Parcourez la collection en ligne, ou venez nous voir à City Plaza. Nous sommes ouverts tous les jours, de 8h00 à 21h00.",
   },
   business: {
-    eyebrow: "Oreste pour les entreprises",
+    eyebrow: "Oreste pour les entreprises · Kigali",
+    titleA: "Équipez toute votre cuisine.",
+    titleEm: "Un seul fournisseur. De meilleurs prix.",
+    lead: "Oreste Utensils approvisionne les restaurants, hôtels, cafés et institutions de Kigali en ustensiles de cuisson, vaisselle, couverts et électroménager — aux prix de gros, réapprovisionnés à temps, livrés à votre porte.",
+    ctaQuote: "Obtenir un devis de gros",
+    ctaTalk: "Parler à l'équipe pro",
+    trust1: "Livraison dans Kigali",
+    trust2: "Paiement à la livraison",
+    trust3: "Adossé à une vraie boutique",
+    audienceLabel: "Conçu pour les cuisines qui nourrissent Kigali",
+    audience: [
+      "Restaurants",
+      "Hôtels & lodges",
+      "Cafés & boulangeries",
+      "Traiteurs & événements",
+      "Écoles & institutions",
+      "Détaillants & revendeurs",
+    ],
+    valueEyebrow: "Pourquoi acheter chez Oreste",
+    valueTitle:
+      "Tout ce qu'une cuisine active attend d'un fournisseur — et rien de superflu.",
+    valueStack: [
+      {
+        t: "Des prix de gros qui évoluent avec vous",
+        b: "Plus vous commandez, meilleur est votre tarif. Une grille de prix claire, sans marchander à chaque fois.",
+      },
+      {
+        t: "Un seul fournisseur pour toute la cuisine",
+        b: "Des casseroles aux assiettes aux couverts à l'électroménager — arrêtez de jongler avec cinq fournisseurs et cinq factures.",
+      },
+      {
+        t: "Réassort régulier, à l'heure",
+        b: "Nous gardons vos habituels en stock et faisons tourner votre cuisine. Fini les mauvaises surprises de rupture en plein service.",
+      },
+      {
+        t: "Livraison dans Kigali",
+        b: "Directement à la porte de votre cuisine. Commandes en gros livrées selon un planning adapté à votre activité.",
+      },
+      {
+        t: "Une vraie personne sur WhatsApp",
+        b: "Un contact dédié qui connaît votre compte — pas un centre d'appels. Recommandez en quelques secondes.",
+      },
+      {
+        t: "Inspectez avant de payer",
+        b: "Chaque livraison est vérifiée avant tout échange d'argent. Payez en espèces ou par MoMo à la livraison.",
+      },
+    ],
+    guaranteeTitle: "La garantie « inspectez avant de payer »",
+    guaranteeBody:
+      "Vous vérifiez chaque livraison avant tout échange d'argent. Si quelque chose ne va pas, vous ne le payez pas — nous le remplaçons, sans discuter. C'est l'accord sur chaque commande pro, à chaque fois.",
+    processTitle: "La mise en place tient en un message.",
+    steps: [
+      {
+        t: "Dites-nous ce que vous gérez",
+        b: "Envoyez les détails de votre entreprise et une idée de vos besoins — 60 secondes suffisent.",
+      },
+      {
+        t: "Recevez votre devis pro",
+        b: "Nous revenons sur WhatsApp avec des prix de gros adaptés à votre volume, généralement en un jour.",
+      },
+      {
+        t: "Commandez & réapprovisionnez en boucle",
+        b: "Vous validez, nous livrons dans Kigali, vous payez à la livraison. Recommandez à tout moment en un message.",
+      },
+    ],
+    quoteEyebrow: "Sans engagement",
+    quoteTitle: "Obtenez votre devis de gros aujourd'hui",
+    quoteBody:
+      "Envoyez-nous l'essentiel et nous revenons avec des prix de gros conçus pour votre volume. Vous préférez en discuter ? Écrivez à notre équipe pro sur WhatsApp — nous répondons vite.",
+    quotePoints: [
+      "Aucuns frais de compte, aucun minimum pour un devis",
+      "Des prix adaptés à ce que vous commandez",
+      "Un fournisseur, une facture, un contact",
+    ],
+    quoteDirect: "Ou écrivez-nous directement —",
+    form: {
+      title: "Obtenir les prix de gros",
+      lede: "Parlez-nous de votre entreprise et nous vous envoyons un devis pro. Sans engagement, sans frais de compte.",
+      businessName: "Nom de l'entreprise",
+      businessNamePlaceholder: "ex. Hôtel des Mille Collines",
+      businessType: "Type d'entreprise",
+      yourName: "Votre nom",
+      namePlaceholder: "ex. Oreste",
+      phone: "Téléphone / WhatsApp",
+      need: "De quoi avez-vous besoin ?",
+      optional: "(facultatif)",
+      needPlaceholder: "ex. 40 assiettes, 20 couteaux de chef, réassort mensuel…",
+      submit: "Demander mon devis pro",
+      sending: "Envoi…",
+      replyNote: "Nous répondons sur WhatsApp, généralement en un jour ouvré.",
+      doneTitle: "Demande reçue",
+      doneBody:
+        "Nous avons ouvert WhatsApp avec vos informations — envoyez le message et notre équipe pro reviendra avec les prix, généralement en un jour ouvré.",
+    },
   },
   reviews: {
     eyebrow: "Ce que disent nos clients",

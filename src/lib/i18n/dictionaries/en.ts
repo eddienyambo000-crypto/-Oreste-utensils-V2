@@ -212,9 +212,124 @@ export const en = {
   },
   about: {
     eyebrow: "Our story",
+    title: "Kigali kitchens deserve better tools.",
+    lead: "Oreste Utensils is a premium kitchenware brand and retailer based at City Plaza, Kigali, Rwanda. We supply exclusive, modern home and kitchen essentials — cookware, dinnerware, cutlery, glassware, storage and small appliances — to homes and businesses across Kigali.",
+    para2:
+      "We started with a simple frustration: finding genuinely good kitchenware in Kigali usually meant an import errand or a disappointing compromise. So we built the shop we wanted to buy from — carefully chosen ranges, honest prices in Rwandan francs, and a team that actually cooks and can tell you what's worth it.",
+    imageAlt: "A couple comparing quality cookware at Oreste Utensils",
+    values: [
+      {
+        t: "A real shop, real stock",
+        b: "We're not a drop-shipping page. Everything we sell sits on our shelves at City Plaza, where you can pick it up and feel the quality before you buy.",
+      },
+      {
+        t: "Curated, not cluttered",
+        b: "We'd rather stock fifty things worth owning than five hundred that aren't. Every piece is chosen for how it performs in a real Kigali kitchen.",
+      },
+      {
+        t: "Kigali, delivered",
+        b: "Order online and we bring it to your door anywhere in the city — free over 500,000 RWF. Pay when it arrives, cash or MoMo.",
+      },
+    ],
+    ctaTitle: "Ready to upgrade your kitchen?",
+    ctaBody:
+      "Browse the collection online, or come see us at City Plaza. We're open every day, 8:00 AM – 9:00 PM.",
   },
   business: {
-    eyebrow: "Oreste for Business",
+    eyebrow: "Oreste for Business · Kigali",
+    titleA: "Outfit your entire kitchen.",
+    titleEm: "One supplier. Better prices.",
+    lead: "Oreste Utensils supplies Kigali's restaurants, hotels, cafés and institutions with cookware, tableware, cutlery and appliances — at trade prices, restocked on time, delivered to your door.",
+    ctaQuote: "Get a wholesale quote",
+    ctaTalk: "Talk to the trade team",
+    trust1: "Delivery across Kigali",
+    trust2: "Pay on delivery",
+    trust3: "Backed by a real store",
+    audienceLabel: "Built for the kitchens that feed Kigali",
+    audience: [
+      "Restaurants",
+      "Hotels & lodges",
+      "Cafés & bakeries",
+      "Catering & events",
+      "Schools & institutions",
+      "Retailers & resellers",
+    ],
+    valueEyebrow: "Why buy through Oreste",
+    valueTitle:
+      "Everything a busy kitchen needs from a supplier — and nothing it doesn't.",
+    valueStack: [
+      {
+        t: "Trade pricing that scales with you",
+        b: "The more you order, the better your rate. One clear price list, no haggling every time.",
+      },
+      {
+        t: "One supplier for the whole kitchen",
+        b: "Pots to plates to cutlery to appliances — stop juggling five vendors and chasing five invoices.",
+      },
+      {
+        t: "Consistent restock, on time",
+        b: "We hold your regulars in stock and keep your kitchen running. No more 'out of stock' surprises mid-service.",
+      },
+      {
+        t: "Delivery across Kigali",
+        b: "Straight to your kitchen door. Bulk orders delivered on a schedule that suits your operation.",
+      },
+      {
+        t: "A real person on WhatsApp",
+        b: "A dedicated contact who knows your account — not a call centre. Reorder in seconds.",
+      },
+      {
+        t: "Inspect before you pay",
+        b: "Every delivery is checked before money changes hands. Pay cash or MoMo on delivery.",
+      },
+    ],
+    guaranteeTitle: "The “inspect before you pay” guarantee",
+    guaranteeBody:
+      "You check every delivery before any money changes hands. If something isn't right, you don't pay for it — we replace it, no argument. That's the deal with every trade order, every time.",
+    processTitle: "Setting up takes one message.",
+    steps: [
+      {
+        t: "Tell us what you run",
+        b: "Send your business details and a rough idea of what you need — takes 60 seconds.",
+      },
+      {
+        t: "Get your trade quote",
+        b: "We come back on WhatsApp with wholesale pricing tailored to your volume, usually within a day.",
+      },
+      {
+        t: "Order & restock on repeat",
+        b: "Approve, we deliver across Kigali, you pay on delivery. Reorder any time with one message.",
+      },
+    ],
+    quoteEyebrow: "No obligation",
+    quoteTitle: "Get your wholesale quote today",
+    quoteBody:
+      "Send us the basics and we'll come back with trade pricing built for your volume. Prefer to talk it through? Message our trade team on WhatsApp — we reply fast.",
+    quotePoints: [
+      "No account fees, no minimums to get a quote",
+      "Pricing tailored to how much you order",
+      "One supplier, one invoice, one contact",
+    ],
+    quoteDirect: "Or message us directly —",
+    form: {
+      title: "Get wholesale pricing",
+      lede: "Tell us about your business and we'll send a trade quote. No obligation, no account fees.",
+      businessName: "Business name",
+      businessNamePlaceholder: "e.g. Hôtel des Mille Collines",
+      businessType: "Business type",
+      yourName: "Your name",
+      namePlaceholder: "e.g. Oreste",
+      phone: "Phone / WhatsApp",
+      need: "What do you need?",
+      optional: "(optional)",
+      needPlaceholder: "e.g. 40 dinner plates, 20 chef's knives, monthly restock…",
+      submit: "Request my trade quote",
+      sending: "Sending…",
+      replyNote: "We reply on WhatsApp, usually within one business day.",
+      doneTitle: "Request received",
+      doneBody:
+        "We've opened WhatsApp with your details — send the message and our trade team will come back with pricing, usually within one business day.",
+    },
   },
   reviews: {
     eyebrow: "What our clients say",

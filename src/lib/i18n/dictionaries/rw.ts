@@ -215,9 +215,124 @@ export const rw: Dictionary = {
   },
   about: {
     eyebrow: "Inkuru yacu",
+    title: "Ibikoni bya Kigali bikwiriye ibikoresho byiza.",
+    lead: "Oreste Utensils ni ikirango n'iduka ry'ibikoresho by'igikoni byiza riherereye kuri City Plaza, Kigali, mu Rwanda. Dutanga ibikoresho by'igezweho kandi bidasanzwe byo mu rugo no mu gikoni — ibyo guteka, amasahani, amakanya, ibirahuri, ububiko n'ibikoresho bito by'amashanyarazi — ku ngo no ku bucuruzi muri Kigali hose.",
+    para2:
+      "Twatangiye ku kibazo cyoroshye: kubona ibikoresho by'igikoni nyabyo byiza i Kigali akenshi byasabaga kubitumiza hanze cyangwa kwemera ibitameze neza. Nuko twiyubakira iduka twifuzaga kuguramo — ibicuruzwa byatoranyijwe neza, ibiciro biboneye mu mafaranga y'u Rwanda, n'ikipe iteka nyikoresha ikanakubwira ibikwiriye.",
+    imageAlt: "Umugabo n'umugore bagereranya ibikoresho by'igikoni byiza kuri Oreste Utensils",
+    values: [
+      {
+        t: "Iduka nyako, ibicuruzwa nyako",
+        b: "Ntabwo turi urupapuro rwo kohereza ibicuruzwa gusa. Ibyo ducuruza byose biri ku maraka yacu kuri City Plaza, aho ushobora kubifata ukumva ubwiza mbere yo kugura.",
+      },
+      {
+        t: "Byatoranyijwe, ntibyuzuye urujijo",
+        b: "Twahitamo kugira ibintu mirongo itanu bikwiriye kuba ibyawe kuruta magana atanu bitabikwiriye. Buri kintu gitoranywa hakurikijwe uko gikora mu gikoni nyakuri cya Kigali.",
+      },
+      {
+        t: "Kigali, tugutwarira",
+        b: "Tumiza kuri interineti tukazana ku muryango wawe ahantu hose mu mujyi — ku buntu hejuru ya 500,000 RWF. Wishyura igihe bigeze, amafaranga cyangwa MoMo.",
+      },
+    ],
+    ctaTitle: "Witeguye kuzamura igikoni cyawe?",
+    ctaBody:
+      "Reba ibicuruzwa kuri interineti, cyangwa uze uturebe kuri City Plaza. Dukingura buri munsi, 8:00 AM – 9:00 PM.",
   },
   business: {
-    eyebrow: "Oreste ku Bucuruzi",
+    eyebrow: "Oreste ku Bucuruzi · Kigali",
+    titleA: "Uzuza igikoni cyawe cyose.",
+    titleEm: "Umucuruzi umwe. Ibiciro biboneye.",
+    lead: "Oreste Utensils iha resitora, hoteli, kafe n'ibigo bya Kigali ibikoresho byo guteka, ibyo ku meza, amakanya n'ibikoresho by'amashanyarazi — ku biciro by'ubucuruzi, byongerwamo ku gihe, bigezwa ku muryango wawe.",
+    ctaQuote: "Saba igiciro cy'ubwinshi",
+    ctaTalk: "Vugana n'itsinda ry'ubucuruzi",
+    trust1: "Gutwara muri Kigali",
+    trust2: "Wishyura igihe bigeze",
+    trust3: "Rushingiye ku iduka nyako",
+    audienceLabel: "Byateguriwe ibikoni bigaburira Kigali",
+    audience: [
+      "Resitora",
+      "Hoteli n'amacumbi",
+      "Kafe n'ahakorerwa imigati",
+      "Serivisi zo guteka n'ibirori",
+      "Amashuri n'ibigo",
+      "Abacuruzi n'abongera kugurisha",
+    ],
+    valueEyebrow: "Impamvu wagura kuri Oreste",
+    valueTitle:
+      "Ibyo igikoni gihuze gikeneye byose ku mucuruzi — nta n'ikitagikenewe.",
+    valueStack: [
+      {
+        t: "Ibiciro by'ubucuruzi byiyongera nawe",
+        b: "Uko wumiza byinshi, ni ko ubona igiciro cyiza. Urutonde rumwe rw'ibiciro rusobanutse, nta kubiganira buri gihe.",
+      },
+      {
+        t: "Umucuruzi umwe ku gikoni cyose",
+        b: "Kuva ku nkono kugeza ku masahani kugeza ku makanya kugeza ku bikoresho by'amashanyarazi — reka guhuza abacuruzi batanu no gukurikirana za faktire eshanu.",
+      },
+      {
+        t: "Kongera stoke ku gihe, buri gihe",
+        b: "Tubika ibyo ukunda muri stoke tugakomeza igikoni cyawe kigenda. Nta 'byashize' bigutungura hagati mu kazi.",
+      },
+      {
+        t: "Gutwara muri Kigali",
+        b: "Kugeza ku muryango w'igikoni cyawe. Ibyaguzwe byinshi bigezwa ku gahunda ihuye n'akazi kawe.",
+      },
+      {
+        t: "Umuntu nyawe kuri WhatsApp",
+        b: "Umuntu wihariye uzi konti yawe — atari ikigo cy'amasimbi. Ongera utumize mu masegonda make.",
+      },
+      {
+        t: "Genzura mbere yo kwishyura",
+        b: "Buri gutanga bigenzurwa mbere y'uko amafaranga ahererekanywa. Wishyura amafaranga cyangwa MoMo igihe bigeze.",
+      },
+    ],
+    guaranteeTitle: "Icyemezo cyo “kugenzura mbere yo kwishyura”",
+    guaranteeBody:
+      "Ugenzura buri gutanga mbere y'uko amafaranga ahererekanywa. Niba hari ikitameze neza, ntukibyishyurira — turabisimbuza, nta mpaka. Ni ko bimeze kuri buri tumizo ry'ubucuruzi, buri gihe.",
+    processTitle: "Gushyiraho bisaba ubutumwa bumwe.",
+    steps: [
+      {
+        t: "Tubwire icyo ukora",
+        b: "Ohereza amakuru y'ubucuruzi bwawe n'igitekerezo rusange cy'ibyo ukeneye — bifata amasegonda 60.",
+      },
+      {
+        t: "Bona igiciro cyawe cy'ubucuruzi",
+        b: "Tugusubiza kuri WhatsApp n'ibiciro by'ubwinshi bihuye n'ingano yawe, akenshi mu munsi umwe.",
+      },
+      {
+        t: "Tumiza & wongere stoke buri gihe",
+        b: "Wemeza, tukagutwarira muri Kigali, ukishyura igihe bigeze. Ongera utumize igihe icyo ari cyo cyose n'ubutumwa bumwe.",
+      },
+    ],
+    quoteEyebrow: "Nta nshingano",
+    quoteTitle: "Bona igiciro cyawe cy'ubwinshi uyu munsi",
+    quoteBody:
+      "Twoherereze iby'ibanze maze tugusubize n'ibiciro by'ubucuruzi byubatswe ku ngano yawe. Wifuza kubiganira? Twandikire itsinda ry'ubucuruzi kuri WhatsApp — dusubiza vuba.",
+    quotePoints: [
+      "Nta mafaranga ya konti, nta ngano ntoya kugira ngo ubone igiciro",
+      "Ibiciro bihuye n'ingano utumiza",
+      "Umucuruzi umwe, faktire imwe, umuntu umwe",
+    ],
+    quoteDirect: "Cyangwa utwandikire wenyine —",
+    form: {
+      title: "Bona ibiciro by'ubwinshi",
+      lede: "Tubwire ku bucuruzi bwawe maze tukoherereze igiciro cy'ubucuruzi. Nta nshingano, nta mafaranga ya konti.",
+      businessName: "Izina ry'ubucuruzi",
+      businessNamePlaceholder: "urugero: Hôtel des Mille Collines",
+      businessType: "Ubwoko bw'ubucuruzi",
+      yourName: "Amazina yawe",
+      namePlaceholder: "urugero: Oreste",
+      phone: "Telefoni / WhatsApp",
+      need: "Ukeneye iki?",
+      optional: "(si ngombwa)",
+      needPlaceholder: "urugero: amasahani 40, ibyuma 20 by'abateka, kongera stoke buri kwezi…",
+      submit: "Saba igiciro cyanjye cy'ubucuruzi",
+      sending: "Kohereza…",
+      replyNote: "Dusubiza kuri WhatsApp, akenshi mu munsi umwe w'akazi.",
+      doneTitle: "Icyifuzo cyakiriwe",
+      doneBody:
+        "Twafunguye WhatsApp n'amakuru yawe — ohereza ubutumwa maze itsinda ryacu ry'ubucuruzi rigusubize n'ibiciro, akenshi mu munsi umwe w'akazi.",
+    },
   },
   reviews: {
     eyebrow: "Icyo abakiriya bacu bavuga",

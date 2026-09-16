@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { IconCheck, IconWhatsApp } from "@/components/ui/icons";
+import { useLang } from "@/lib/i18n/LanguageProvider";
 import { BUSINESS_TYPES, type BusinessType } from "@/lib/types";
 import { buildTradeMessage, whatsappLink } from "@/lib/whatsapp";
 
 export function TradeQuoteForm() {
+  const { dict } = useLang();
+  const t = dict.business.form;
   const [businessName, setBusinessName] = useState("");
   const [contactName, setContactName] = useState("");
   const [phone, setPhone] = useState("");
@@ -60,11 +63,8 @@ export function TradeQuoteForm() {
         <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-sage/15 text-sage">
           <IconCheck className="h-6 w-6" />
         </span>
-        <h3 className="mt-4 font-display text-xl font-semibold">Request received</h3>
-        <p className="mt-2 text-ink-soft">
-          We&apos;ve opened WhatsApp with your details — send the message and our
-          trade team will come back with pricing, usually within one business day.
-        </p>
+        <h3 className="mt-4 font-display text-xl font-semibold">{t.doneTitle}</h3>
+        <p className="mt-2 text-ink-soft">{t.doneBody}</p>
       </div>
     );
   }
@@ -76,18 +76,15 @@ export function TradeQuoteForm() {
     <form onSubmit={handleSubmit} className="space-y-5 rounded-3xl border border-line bg-surface p-6 shadow-card sm:p-8">
       <div>
         <h3 className="font-display text-2xl font-semibold tracking-[-0.01em]">
-          Get wholesale pricing
+          {t.title}
         </h3>
-        <p className="mt-1.5 text-sm text-ink-soft">
-          Tell us about your business and we&apos;ll send a trade quote. No
-          obligation, no account fees.
-        </p>
+        <p className="mt-1.5 text-sm text-ink-soft">{t.lede}</p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="businessName" className="text-sm font-medium text-ink">
-            Business name <span className="text-copper">*</span>
+            {t.businessName} <span className="text-copper">*</span>
           </label>
           <input
             id="businessName"
@@ -97,12 +94,12 @@ export function TradeQuoteForm() {
             value={businessName}
             onChange={(event) => setBusinessName(event.target.value)}
             className={fieldClass}
-            placeholder="e.g. Hôtel des Mille Collines"
+            placeholder={t.businessNamePlaceholder}
           />
         </div>
         <div>
           <label htmlFor="businessType" className="text-sm font-medium text-ink">
-            Business type <span className="text-copper">*</span>
+            {t.businessType} <span className="text-copper">*</span>
           </label>
           <select
             id="businessType"
@@ -119,7 +116,7 @@ export function TradeQuoteForm() {
         </div>
         <div>
           <label htmlFor="contactName" className="text-sm font-medium text-ink">
-            Your name <span className="text-copper">*</span>
+            {t.yourName} <span className="text-copper">*</span>
           </label>
           <input
             id="contactName"
@@ -129,12 +126,12 @@ export function TradeQuoteForm() {
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
             className={fieldClass}
-            placeholder="e.g. Oreste"
+            placeholder={t.namePlaceholder}
           />
         </div>
         <div>
           <label htmlFor="tradePhone" className="text-sm font-medium text-ink">
-            Phone / WhatsApp <span className="text-copper">*</span>
+            {t.phone} <span className="text-copper">*</span>
           </label>
           <input
             id="tradePhone"
@@ -152,7 +149,7 @@ export function TradeQuoteForm() {
 
       <div>
         <label htmlFor="tradeMessage" className="text-sm font-medium text-ink">
-          What do you need? <span className="text-ink-faint">(optional)</span>
+          {t.need} <span className="text-ink-faint">{t.optional}</span>
         </label>
         <textarea
           id="tradeMessage"
@@ -160,7 +157,7 @@ export function TradeQuoteForm() {
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           className={`${fieldClass} resize-none`}
-          placeholder="e.g. 40 dinner plates, 20 chef's knives, monthly restock…"
+          placeholder={t.needPlaceholder}
         />
       </div>
 
@@ -188,17 +185,15 @@ export function TradeQuoteForm() {
         className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
       >
         {submitting ? (
-          "Sending…"
+          t.sending
         ) : (
           <>
             <IconWhatsApp className="h-5 w-5" />
-            Request my trade quote
+            {t.submit}
           </>
         )}
       </button>
-      <p className="text-center text-xs text-ink-faint">
-        We reply on WhatsApp, usually within one business day.
-      </p>
+      <p className="text-center text-xs text-ink-faint">{t.replyNote}</p>
     </form>
   );
 }
