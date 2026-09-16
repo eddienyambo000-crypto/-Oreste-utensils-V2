@@ -10,6 +10,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import {
+  addToCart,
+  cartCount,
+  cartSubtotal,
+  removeFromCart,
+  setItemQuantity,
+} from "@/lib/cart";
 import { CART_STORAGE_KEY } from "@/lib/constants";
 import type { CartItem, Product } from "@/lib/types";
 
@@ -87,27 +94,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addItem = useCallback((product: Product, quantity = 1) => {
-    setItems((prev) => {
-      const existing = prev.find((item) => item.productId === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.productId === product.id
-            ? { ...item, quantity: Math.min(item.quantity + quantity, 99) }
-            : item,
-        );
-      }
-      return [
-        ...prev,
-        {
-          productId: product.id,
-          slug: product.slug,
-          name: product.name,
-          priceRwf: product.priceRwf,
-          image: product.images[0] ?? "",
-          quantity,
-        },
-      ];
-    });
+    setItems((prev) => addToCart(prev, product, quantity));
     // Feedback without interrupting the browse: a toast + badge bump instead of
     // force-opening the whole drawer on every add.
     setToast({ id: Date.now(), name: product.name, image: product.images[0] ?? "" });
@@ -118,33 +105,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
   const removeItem = useCallback((productId: string) => {
-    setItems((prev) => prev.filter((item) => item.productId !== productId));
+    setItems((prev) => removeFromCart(prev, productId));
   }, []);
 
   const setQuantity = useCallback((productId: string, quantity: number) => {
-    if (quantity < 1) {
-      removeItem(productId);
-      return;
-    }
-    setItems((prev) =>
-      prev.map((item) =>
-        item.productId === productId
-          ? { ...item, quantity: Math.min(quantity, 99) }
-          : item,
-      ),
-    );
-  }, [removeItem]);
+    setItems((prev) => setItemQuantity(prev, productId, quantity));
+  }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const value = useMemo<CartContextValue>(() => {
-    const count = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = items.reduce(
-      (sum, item) => sum + item.priceRwf * item.quantity,
-      0,
-    );
+    const count = cartCount(items);
+    const subtotal = cartSubtotal(items);
     return {
       items,
       count,

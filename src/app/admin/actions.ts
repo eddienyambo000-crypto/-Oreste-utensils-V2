@@ -1,9 +1,10 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
 import { SITE_IMAGE_KEYS } from "@/lib/constants";
+import { CATALOG_TAG } from "@/lib/data";
 import type { LeadStatus, MessageStatus, OrderStatus } from "@/lib/types";
 
 const ORDER_STATUSES: OrderStatus[] = [
@@ -98,6 +99,7 @@ export async function saveProduct(
     return { ok: false, error: error.message };
   }
 
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   revalidatePath(`/product/${data.slug}`);
@@ -111,6 +113,7 @@ export async function deleteProduct(id: string): Promise<ActionResult> {
   }
   const { error } = await supabase.from("ou_products").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   return { ok: true };
@@ -154,6 +157,7 @@ export async function saveCategory(
     };
   }
 
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/", "layout");
   revalidatePath("/admin/categories");
   revalidatePath("/shop");
@@ -175,6 +179,7 @@ export async function deleteCategory(id: string): Promise<ActionResult> {
           : error.message,
     };
   }
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/", "layout");
   revalidatePath("/admin/categories");
   revalidatePath("/shop");
@@ -218,6 +223,7 @@ export async function saveTestimonial(
     : supabase.from("ou_testimonials").insert(row);
   const { error } = await query;
   if (error) return { ok: false, error: error.message };
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/testimonials");
   revalidatePath("/");
   revalidatePath("/admin/testimonials");
@@ -231,6 +237,7 @@ export async function deleteTestimonial(id: string): Promise<ActionResult> {
   }
   const { error } = await supabase.from("ou_testimonials").delete().eq("id", id);
   if (error) return { ok: false, error: error.message };
+  revalidateTag(CATALOG_TAG, "max");
   revalidatePath("/testimonials");
   revalidatePath("/");
   revalidatePath("/admin/testimonials");

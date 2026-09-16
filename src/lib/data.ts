@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import {
   FREE_DELIVERY_THRESHOLD_RWF,
   SITE_IMAGE_KEYS,
@@ -6,6 +7,17 @@ import {
 import { seedCategories, seedProducts } from "./seed";
 import { getPublicClient, isSupabaseConfigured } from "./supabase/public";
 import type { Category, CategorySlug, Product } from "./types";
+
+/**
+ * Cache tag for the shared catalog. The site reads the locale cookie for i18n,
+ * which makes routes dynamically rendered — so the catalog queries are cached
+ * across requests here (revalidated on a timer OR immediately when the admin
+ * edits products/categories/testimonials via revalidateTag(CATALOG_TAG)).
+ * Admin-editable *settings* (logo, site photos, slider, threshold) are left
+ * uncached so their edits go live instantly.
+ */
+export const CATALOG_TAG = "catalog";
+const CATALOG_REVALIDATE = 300;
 
 /**
  * Catalog data access. Reads from Supabase when configured, otherwise from
@@ -66,17 +78,21 @@ function mapCategory(row: CategoryRow): Category {
   };
 }
 
-export async function getCategories(): Promise<Category[]> {
-  if (!isSupabaseConfigured) {
-    return [...seedCategories].sort((a, b) => a.sortOrder - b.sortOrder);
-  }
-  const { data, error } = await getPublicClient()
-    .from("ou_categories")
-    .select("*")
-    .order("sort_order");
-  if (error) throw new Error(`Failed to load categories: ${error.message}`);
-  return (data as CategoryRow[]).map(mapCategory);
-}
+export const getCategories = unstable_cache(
+  async (): Promise<Category[]> => {
+    if (!isSupabaseConfigured) {
+      return [...seedCategories].sort((a, b) => a.sortOrder - b.sortOrder);
+    }
+    const { data, error } = await getPublicClient()
+      .from("ou_categories")
+      .select("*")
+      .order("sort_order");
+    if (error) throw new Error(`Failed to load categories: ${error.message}`);
+    return (data as CategoryRow[]).map(mapCategory);
+  },
+  ["categories"],
+  { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
+);
 
 export async function getCategoryBySlug(
   slug: string,
@@ -85,38 +101,42 @@ export async function getCategoryBySlug(
   return categories.find((c) => c.slug === slug) ?? null;
 }
 
-export async function getProducts(filter?: {
-  categorySlug?: string;
-  featuredOnly?: boolean;
-}): Promise<Product[]> {
-  let products: Product[];
+export const getProducts = unstable_cache(
+  async (filter?: {
+    categorySlug?: string;
+    featuredOnly?: boolean;
+  }): Promise<Product[]> => {
+    let products: Product[];
 
-  if (!isSupabaseConfigured) {
-    products = [...seedProducts];
-  } else {
-    let query = getPublicClient()
-      .from("ou_products")
-      .select("*")
-      .order("created_at", { ascending: false });
+    if (!isSupabaseConfigured) {
+      products = [...seedProducts];
+    } else {
+      let query = getPublicClient()
+        .from("ou_products")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (filter?.categorySlug) {
+        query = query.eq("category_slug", filter.categorySlug);
+      }
+      if (filter?.featuredOnly) {
+        query = query.eq("featured", true);
+      }
+      const { data, error } = await query;
+      if (error) throw new Error(`Failed to load products: ${error.message}`);
+      return (data as ProductRow[]).map(mapProduct);
+    }
+
     if (filter?.categorySlug) {
-      query = query.eq("category_slug", filter.categorySlug);
+      products = products.filter((p) => p.categorySlug === filter.categorySlug);
     }
     if (filter?.featuredOnly) {
-      query = query.eq("featured", true);
+      products = products.filter((p) => p.featured);
     }
-    const { data, error } = await query;
-    if (error) throw new Error(`Failed to load products: ${error.message}`);
-    return (data as ProductRow[]).map(mapProduct);
-  }
-
-  if (filter?.categorySlug) {
-    products = products.filter((p) => p.categorySlug === filter.categorySlug);
-  }
-  if (filter?.featuredOnly) {
-    products = products.filter((p) => p.featured);
-  }
-  return products;
-}
+    return products;
+  },
+  ["products"],
+  { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
+);
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (!isSupabaseConfigured) {
@@ -184,26 +204,30 @@ interface TestimonialRow {
   created_at: string;
 }
 
-export async function getTestimonials(): Promise<import("./types").Testimonial[]> {
-  if (!isSupabaseConfigured) return [];
-  const { data, error } = await getPublicClient()
-    .from("ou_testimonials")
-    .select("*")
-    .order("sort_order")
-    .order("created_at", { ascending: false });
-  // Table may not exist yet (migration pending) — fail soft.
-  if (error) return [];
-  return (data as TestimonialRow[]).map((row) => ({
-    id: row.id,
-    clientName: row.client_name,
-    business: row.business,
-    quote: row.quote,
-    photo: row.photo,
-    rating: row.rating,
-    sortOrder: row.sort_order,
-    createdAt: row.created_at,
-  }));
-}
+export const getTestimonials = unstable_cache(
+  async (): Promise<import("./types").Testimonial[]> => {
+    if (!isSupabaseConfigured) return [];
+    const { data, error } = await getPublicClient()
+      .from("ou_testimonials")
+      .select("*")
+      .order("sort_order")
+      .order("created_at", { ascending: false });
+    // Table may not exist yet (migration pending) — fail soft.
+    if (error) return [];
+    return (data as TestimonialRow[]).map((row) => ({
+      id: row.id,
+      clientName: row.client_name,
+      business: row.business,
+      quote: row.quote,
+      photo: row.photo,
+      rating: row.rating,
+      sortOrder: row.sort_order,
+      createdAt: row.created_at,
+    }));
+  },
+  ["testimonials"],
+  { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
+);
 
 /**
  * Hand-picked homepage slider images, curated by the admin (stored as JSON in
