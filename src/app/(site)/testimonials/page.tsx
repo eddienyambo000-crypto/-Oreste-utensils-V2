@@ -3,15 +3,13 @@ import Link from "next/link";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
 import { Reveal } from "@/components/ui/Reveal";
 import { IconArrowRight, IconWhatsApp } from "@/components/ui/icons";
-import { BUSINESS, SITE_URL } from "@/lib/constants";
 import { getTestimonials } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
-  title: "What Our Clients Say",
-  description:
-    "Real reviews from Oreste Utensils customers — homes, restaurants and hotels across Kigali who trust us for their kitchenware.",
+  title: "Customer Reviews",
+  description: "Reviews from people who have ordered kitchenware from Oreste Utensils, City Plaza, Kigali.",
   alternates: { canonical: "/testimonials" },
 };
 
@@ -21,40 +19,12 @@ export default async function TestimonialsPage() {
     getDictionary(),
   ]);
 
-  const reviewJsonLd =
-    testimonials.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Organization",
-          name: BUSINESS.name,
-          url: SITE_URL,
-          review: testimonials.map((t) => ({
-            "@type": "Review",
-            reviewRating: {
-              "@type": "Rating",
-              ratingValue: t.rating,
-              bestRating: 5,
-            },
-            author: { "@type": "Person", name: t.clientName },
-            reviewBody: t.quote,
-          })),
-        }
-      : null;
-
+  // No Review/Rating structured data: testimonials are published by the shop
+  // itself, which search engines treat as self-serving and ineligible.
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-      {reviewJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
-        />
-      )}
-
       <header className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-          {dict.reviews.eyebrow}
-        </p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">
           {dict.reviews.title}
         </h1>
         <p className="mt-4 leading-relaxed text-ink-soft">{dict.reviews.intro}</p>
@@ -76,14 +46,14 @@ export default async function TestimonialsPage() {
               href={whatsappLink("Hello Oreste Utensils!")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full bg-ink px-6 font-semibold text-porcelain transition-colors duration-200 hover:bg-ink/85"
             >
-              <IconWhatsApp className="h-5 w-5" />
+              <IconWhatsApp aria-hidden className="h-5 w-5" />
               {dict.common.chatWithUs}
             </a>
             <Link
               href="/shop"
-              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-6 py-3 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
+              className="inline-flex min-h-12 cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-semibold text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
             >
               {dict.common.browseShop}
               <IconArrowRight className="h-4 w-4" />

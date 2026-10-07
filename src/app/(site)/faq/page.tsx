@@ -1,92 +1,85 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { DeliveryZones } from "@/components/layout/DeliveryZones";
+import { ServiceFacts } from "@/components/shop/ServiceFacts";
 import { IconChevronDown, IconWhatsApp } from "@/components/ui/icons";
-import { Reveal } from "@/components/ui/Reveal";
-import { FAQS } from "@/lib/faq";
+import { getFreeDeliveryThreshold } from "@/lib/data";
+import { formatRwf } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
   title: "Delivery, Payment & FAQ",
   description:
-    "Everything about ordering from Oreste Utensils in Kigali — delivery across the city, free delivery over 500,000 RWF, pay cash or MoMo on delivery, returns, and opening hours.",
+    "Ordering from Oreste Utensils in Kigali: delivery across the city, pay cash or MoMo on delivery, free pickup at City Plaza, opening hours and returns.",
   alternates: { canonical: "/faq" },
 };
 
 export default async function FaqPage() {
-  const dict = await getDictionary();
+  const [dict, threshold] = await Promise.all([getDictionary(), getFreeDeliveryThreshold()]);
+  const t = dict.faq;
+  // One source for the visible answers and the FAQPage structured data.
+  const items = t.items.map((item) => ({
+    q: item.q,
+    a: item.a.replace("{amount}", formatRwf(threshold)),
+  }));
+
   const faqJsonLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: FAQS.map((faq) => ({
+    mainEntity: items.map((item) => ({
       "@type": "Question",
-      name: faq.question,
-      acceptedAnswer: { "@type": "Answer", text: faq.answer },
+      name: item.q,
+      acceptedAnswer: { "@type": "Answer", text: item.a },
     })),
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
+    <div className="mx-auto max-w-3xl px-4 pb-16 pt-10 sm:px-6 lg:px-8 lg:pt-14">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-      <Reveal>
-        <header className="max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-            {dict.faq.eyebrow}
-          </p>
-          <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.02em] sm:text-5xl">
-            {dict.faq.title}
-          </h1>
-          <p className="mt-4 leading-relaxed text-ink-soft">{dict.faq.intro}</p>
-        </header>
-      </Reveal>
+      <header className="max-w-2xl">
+        <h1 className="font-display text-4xl font-semibold tracking-[-0.03em] sm:text-5xl">{t.title}</h1>
+        <p className="mt-3 leading-relaxed text-ink-soft">{t.intro}</p>
+      </header>
 
-      <Reveal className="mt-8">
-        <h2 className="mb-3 font-display text-lg font-semibold">
-          {dict.delivery.heading}
-        </h2>
-        <DeliveryZones />
-      </Reveal>
+      <ServiceFacts dict={dict} threshold={threshold} className="mt-8" />
 
       <div className="mt-10 divide-y divide-line rounded-2xl border border-line bg-surface">
-        {FAQS.map((faq, index) => (
-          <Reveal key={faq.question} delay={index * 45}>
-            <details className="group px-5 py-1 sm:px-6">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 font-medium text-ink [&::-webkit-details-marker]:hidden">
-                {faq.question}
-                <IconChevronDown className="h-5 w-5 shrink-0 text-ink-faint transition-transform duration-200 group-open:rotate-180" />
-              </summary>
-              <p className="pb-5 leading-relaxed text-ink-soft">{faq.answer}</p>
-            </details>
-          </Reveal>
+        {items.map((item) => (
+          <details key={item.q} className="group px-5 sm:px-6">
+            <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 font-medium text-ink [&::-webkit-details-marker]:hidden">
+              {item.q}
+              <IconChevronDown
+                aria-hidden
+                className="h-5 w-5 shrink-0 text-ink-faint transition-transform duration-200 group-open:rotate-180"
+              />
+            </summary>
+            <p className="pb-5 leading-relaxed text-ink-soft">{item.a}</p>
+          </details>
         ))}
       </div>
 
-      <Reveal className="mt-10 flex flex-col items-center gap-4 rounded-2xl bg-cream/60 px-6 py-10 text-center">
-        <h2 className="font-display text-xl font-semibold">{dict.faq.stillTitle}</h2>
-        <p className="max-w-sm text-sm text-ink-soft">{dict.faq.stillBody}</p>
-        <div className="flex flex-wrap justify-center gap-3">
+      <div className="mt-10 rounded-2xl bg-cream/60 px-6 py-10 text-center">
+        <h2 className="font-display text-xl font-semibold">{t.stillTitle}</h2>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-ink-soft">{t.stillBody}</p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
           <a
             href={whatsappLink("Hello Oreste Utensils! I have a question about ordering.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-ink px-6 font-semibold text-porcelain transition-colors duration-200 hover:bg-ink/85"
           >
-            <IconWhatsApp className="h-5 w-5" />
+            <IconWhatsApp aria-hidden className="h-5 w-5" />
             {dict.common.chatWithUs}
           </a>
           <Link
             href="/shop"
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-line-strong bg-surface px-6 py-3 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center rounded-full border border-line-strong bg-surface px-6 font-semibold text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
           >
             {dict.common.browseShop}
           </Link>
         </div>
-      </Reveal>
+      </div>
     </div>
   );
 }

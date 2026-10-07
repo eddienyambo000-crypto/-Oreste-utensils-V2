@@ -37,7 +37,7 @@ export function LanguageSwitcher() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={dict.language.change}
-        className="flex cursor-pointer items-center gap-1 rounded-full px-2 py-2 text-ink transition-colors duration-200 hover:bg-cream active:scale-95"
+        className="flex min-h-11 cursor-pointer items-center gap-1 rounded-full px-2.5 text-ink transition-colors duration-200 hover:bg-cream"
       >
         <IconGlobe className="h-5 w-5" />
         <span className="text-xs font-semibold tabular-nums">

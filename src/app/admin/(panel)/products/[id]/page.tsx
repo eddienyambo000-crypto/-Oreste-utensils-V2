@@ -1,10 +1,13 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { ProductEditor } from "../ProductEditor";
+import { categoryOptions } from "../categoryOptions";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
 import { getCategories } from "@/lib/data";
 import type { CategorySlug, Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = { title: "Edit product" };
 
 interface ProductRow {
   id: string;
@@ -56,7 +59,7 @@ export default async function EditProductPage({
   return (
     <ProductEditor
       product={product}
-      categories={categories.map((c) => ({ slug: c.slug, name: c.name }))}
+      categories={categoryOptions(categories)}
     />
   );
 }

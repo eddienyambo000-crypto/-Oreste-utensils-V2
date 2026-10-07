@@ -53,6 +53,12 @@ describe("buildOrderMessage", () => {
     expect(msg).toContain("Note: call first");
   });
 
+  it("leads with the order reference when there is one", () => {
+    const base = { items, customerName: "A", phone: "x", fulfillment: "pickup" as const, deliveryArea: null, note: null };
+    expect(buildOrderMessage({ ...base, reference: "OU-1A2B3C" })).toMatch(/^New order OU-1A2B3C — oresteutensils.com/);
+    expect(buildOrderMessage(base)).toMatch(/^New order — oresteutensils.com/);
+  });
+
   it("uses the free pickup line for pickup", () => {
     const msg = buildOrderMessage({
       items,

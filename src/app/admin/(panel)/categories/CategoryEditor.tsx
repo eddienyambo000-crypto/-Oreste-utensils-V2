@@ -9,23 +9,12 @@ import { compressImage } from "@/lib/image";
 import { IconTrash } from "@/components/ui/icons";
 import type { Category } from "@/lib/types";
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
-}
-
 export function CategoryEditor({ category }: { category?: Category }) {
   const router = useRouter();
   const isEdit = Boolean(category);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(category?.name ?? "");
-  const [slug, setSlug] = useState(category?.slug ?? "");
-  const [slugTouched, setSlugTouched] = useState(isEdit);
   const [description, setDescription] = useState(category?.description ?? "");
   const [intro, setIntro] = useState(category?.intro ?? "");
   const [image, setImage] = useState(category?.image ?? "");
@@ -35,11 +24,6 @@ export function CategoryEditor({ category }: { category?: Category }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  function handleNameChange(value: string) {
-    setName(value);
-    if (!slugTouched) setSlug(slugify(value));
-  }
 
   async function handleFile(files: FileList | null) {
     const file = files?.[0];
@@ -70,7 +54,6 @@ export function CategoryEditor({ category }: { category?: Category }) {
     const result = await saveCategory({
       id: category?.id,
       name: name.trim(),
-      slug: slug.trim(),
       description: description.trim(),
       intro: intro.trim(),
       image,
@@ -124,7 +107,10 @@ export function CategoryEditor({ category }: { category?: Category }) {
       <div className="space-y-5 rounded-2xl border border-line bg-surface p-5 sm:p-6">
         {/* Image */}
         <div>
-          <span className="text-sm font-medium text-ink">Tile image</span>
+          <span className="text-sm font-medium text-ink">Cover photo</span>
+          <p className="mt-0.5 text-xs text-ink-faint">
+            Categories with a cover photo appear as departments on the homepage.
+          </p>
           <div className="mt-2 flex items-center gap-4">
             <div className="relative h-20 w-28 shrink-0 overflow-hidden rounded-lg bg-cream">
               {image && (
@@ -159,14 +145,14 @@ export function CategoryEditor({ category }: { category?: Category }) {
               type="text"
               required
               value={name}
-              onChange={(event) => handleNameChange(event.target.value)}
+              onChange={(event) => setName(event.target.value)}
               className={fieldClass}
               placeholder="e.g. Bakeware"
             />
           </div>
           <div>
             <label htmlFor="sortOrder" className="text-sm font-medium text-ink">
-              Sort order
+              Position <span className="text-ink-faint">(lower shows first)</span>
             </label>
             <input
               id="sortOrder"
@@ -179,24 +165,19 @@ export function CategoryEditor({ category }: { category?: Category }) {
           </div>
         </div>
 
-        <div>
-          <label htmlFor="slug" className="text-sm font-medium text-ink">
-            URL slug
-          </label>
-          <input
-            id="slug"
-            type="text"
-            required
-            value={slug}
-            onChange={(event) => {
-              setSlugTouched(true);
-              setSlug(slugify(event.target.value));
-            }}
-            className={`${fieldClass} font-mono text-sm`}
-            placeholder="bakeware"
-          />
-          <p className="mt-1 text-xs text-ink-faint">Lives at /shop/{slug || "…"}</p>
-        </div>
+        {category && (
+          <p className="text-sm text-ink-soft">
+            Page:{" "}
+            <a
+              href={`/shop/${category.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-copper underline-offset-2 hover:underline"
+            >
+              /shop/{category.slug}
+            </a>
+          </p>
+        )}
 
         <div>
           <label htmlFor="description" className="text-sm font-medium text-ink">

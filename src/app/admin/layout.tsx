@@ -2,9 +2,17 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { isSupabaseConfigured } from "@/lib/supabase/public";
 
+// Its own installable app: "Oreste Admin" on the owner's home screen opens
+// straight into the dashboard, separate from the storefront app.
 export const metadata: Metadata = {
-  title: "Admin",
+  title: { default: "Admin", template: "%s · Oreste Admin" },
   robots: { index: false, follow: false },
+  manifest: "/admin.webmanifest",
+  appleWebApp: { capable: true, title: "Oreste Admin", statusBarStyle: "default" },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/admin-apple-180.png", sizes: "180x180" }],
+  },
 };
 
 export default function AdminRootLayout({ children }: { children: ReactNode }) {

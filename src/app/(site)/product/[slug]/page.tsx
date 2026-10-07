@@ -1,215 +1,170 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { notFound, unstable_rethrow } from "next/navigation";
+import { PurchasePanel } from "@/components/cart/PurchasePanel";
+import { CatalogNotice } from "@/components/shop/CatalogNotice";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductGallery } from "@/components/shop/ProductGallery";
-import { Reveal } from "@/components/ui/Reveal";
-import {
-  IconCheck,
-  IconShield,
-  IconStore,
-  IconTruck,
-  IconWhatsApp,
-} from "@/components/ui/icons";
-import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF, SITE_URL } from "@/lib/constants";
+import { ServiceFacts } from "@/components/shop/ServiceFacts";
+import { absoluteUrl } from "@/lib/catalog";
+import { BUSINESS, SITE_URL } from "@/lib/constants";
 import {
   getCategories,
+  getFreeDeliveryThreshold,
   getProductBySlug,
-  getProducts,
   getRelatedProducts,
 } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
-import { productInquiryLink } from "@/lib/whatsapp";
+import { getDictionary } from "@/lib/i18n/server";
 
-export const revalidate = 300;
+type Params = Promise<{ slug: string }>;
 
-export async function generateStaticParams() {
-  const products = await getProducts();
-  return products.map((product) => ({ slug: product.slug }));
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlug(slug).catch(() => null);
   if (!product) return {};
   return {
     title: product.name,
-    description: product.shortDescription,
+    description: product.shortDescription || undefined,
     alternates: { canonical: `/product/${product.slug}` },
     openGraph: {
       title: `${product.name} — Oreste Utensils`,
-      description: product.shortDescription,
-      images: product.images[0] ? [{ url: product.images[0] }] : undefined,
+      description: product.shortDescription || undefined,
+      images: product.images[0] ? [{ url: absoluteUrl(product.images[0]) }] : undefined,
     },
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ProductPage({ params }: { params: Params }) {
   const { slug } = await params;
-  const product = await getProductBySlug(slug);
-  if (!product) notFound();
+  const dict = await getDictionary();
+  const t = dict.product;
 
-  const [categories, related] = await Promise.all([
-    getCategories(),
-    getRelatedProducts(product),
-  ]);
+  let loaded;
+  try {
+    const product = await getProductBySlug(slug);
+    if (!product) notFound();
+    const [categories, related, threshold] = await Promise.all([
+      getCategories(),
+      getRelatedProducts(product),
+      getFreeDeliveryThreshold(),
+    ]);
+    loaded = { product, categories, related, threshold };
+  } catch (error) {
+    unstable_rethrow(error); // let notFound() reach Next
+    console.error("[product] failed to load:", error);
+    return (
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <CatalogNotice kind="unavailable" retryHref={`/product/${slug}`} dict={dict} />
+      </div>
+    );
+  }
+
+  const { product, categories, related, threshold } = loaded;
   const category = categories.find((c) => c.slug === product.categorySlug);
+  const productUrl = `${SITE_URL}/product/${product.slug}`;
 
+  // Structured data mirrors only what the page shows: no ratings or reviews
+  // are claimed here because none are verified.
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: product.name,
-    description: product.description,
-    image: product.images.map((img) => `${SITE_URL}${img}`),
+    description: product.description || product.shortDescription,
+    image: product.images.map(absoluteUrl),
+    sku: product.slug,
     category: category?.name,
     brand: { "@type": "Brand", name: BUSINESS.name },
     offers: {
       "@type": "Offer",
       priceCurrency: "RWF",
       price: product.priceRwf,
-      availability: product.inStock
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
-      url: `${SITE_URL}/product/${product.slug}`,
+      availability: product.inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      url: productUrl,
       seller: { "@type": "Organization", name: BUSINESS.name },
     },
   };
-
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/shop` },
-      category && {
-        "@type": "ListItem",
-        position: 2,
-        name: category.name,
-        item: `${SITE_URL}/shop/${category.slug}`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: product.name,
-        item: `${SITE_URL}/product/${product.slug}`,
-      },
-    ].filter(Boolean),
+      { "@type": "ListItem", position: 1, name: dict.nav.shop, item: `${SITE_URL}/shop` },
+      ...(category
+        ? [{ "@type": "ListItem", position: 2, name: category.name, item: `${SITE_URL}/shop/${category.slug}` }]
+        : []),
+      { "@type": "ListItem", position: category ? 3 : 2, name: product.name, item: productUrl },
+    ],
   };
 
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+  const specs = Object.entries(product.specs);
 
-      <nav aria-label="Breadcrumb" className="text-sm text-ink-faint">
+  return (
+    <div className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8 lg:pt-10">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+
+      <nav aria-label={t.breadcrumb} className="text-sm text-ink-faint">
         <ol className="flex flex-wrap items-center gap-2">
           <li>
             <Link href="/shop" className="transition-colors duration-200 hover:text-copper">
-              Shop
+              {dict.nav.shop}
             </Link>
           </li>
-          <li aria-hidden>/</li>
           {category && (
             <>
+              <li aria-hidden>/</li>
               <li>
-                <Link
-                  href={`/shop/${category.slug}`}
-                  className="transition-colors duration-200 hover:text-copper"
-                >
+                <Link href={`/shop/${category.slug}`} className="transition-colors duration-200 hover:text-copper">
                   {category.name}
                 </Link>
               </li>
-              <li aria-hidden>/</li>
             </>
           )}
-          <li className="font-medium text-ink-soft">{product.name}</li>
+          <li aria-hidden>/</li>
+          <li aria-current="page" className="line-clamp-1 font-medium text-ink-soft">
+            {product.name}
+          </li>
         </ol>
       </nav>
 
-      <div className="mt-6 grid gap-10 lg:grid-cols-2 lg:gap-14">
+      <div className="mt-5 grid gap-8 md:grid-cols-2 lg:gap-14">
         <ProductGallery images={product.images} name={product.name} />
 
-        <div className="lg:py-4">
-          {category && (
-            <Link
-              href={`/shop/${category.slug}`}
-              className="text-xs font-semibold uppercase tracking-[0.16em] text-copper transition-colors duration-200 hover:text-copper-deep"
-            >
-              {category.name}
-            </Link>
-          )}
-          <h1 className="mt-3 font-display text-3xl font-bold leading-tight tracking-[-0.02em] sm:text-4xl">
+        <div>
+          <h1 className="font-display text-3xl font-semibold leading-[1.1] tracking-[-0.02em] text-balance sm:text-4xl">
             {product.name}
           </h1>
-          <p className="mt-4 font-display text-2xl font-semibold tabular-nums text-ink">
+          <p className="mt-3 font-display text-2xl font-semibold tabular-nums">
             {formatRwf(product.priceRwf)}
           </p>
+          <p
+            className={`mt-2 flex items-center gap-2 text-sm font-medium ${
+              product.inStock ? "text-sage" : "text-ink-faint"
+            }`}
+          >
+            <span aria-hidden className={`h-2 w-2 rounded-full ${product.inStock ? "bg-sage" : "bg-ink-faint"}`} />
+            {product.inStock ? t.inStockAt : t.outOfStock}
+          </p>
 
-          <div className="mt-3 flex items-center gap-2 text-sm">
-            {product.inStock ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/12 px-3 py-1 font-medium text-sage">
-                <IconCheck className="h-3.5 w-3.5" />
-                In stock at City Plaza
-              </span>
-            ) : (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-ink/8 px-3 py-1 font-medium text-ink-soft">
-                Currently out of stock
-              </span>
-            )}
+          {(product.description || product.shortDescription) && (
+            <p className="mt-6 max-w-prose leading-relaxed text-ink-soft">
+              {product.description || product.shortDescription}
+            </p>
+          )}
+
+          <div className="mt-8">
+            <PurchasePanel product={product} />
           </div>
 
-          <p className="mt-6 leading-relaxed text-ink-soft">{product.description}</p>
+          <ServiceFacts dict={dict} threshold={threshold} className="mt-8" />
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <AddToCartButton product={product} size="large" />
-            <a
-              href={productInquiryLink(product.name)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-strong bg-surface px-8 py-4 font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper active:scale-[0.98]"
-            >
-              <IconWhatsApp className="h-5 w-5" />
-              Ask about this item
-            </a>
-          </div>
-
-          {/* Trust row */}
-          <ul className="mt-8 grid gap-3 rounded-2xl border border-line bg-surface p-5 text-sm sm:grid-cols-3">
-            <li className="flex items-center gap-2.5 text-ink-soft">
-              <IconTruck className="h-5 w-5 shrink-0 text-copper" />
-              Free delivery over {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}
-            </li>
-            <li className="flex items-center gap-2.5 text-ink-soft">
-              <IconShield className="h-5 w-5 shrink-0 text-copper" />
-              Pay cash or MoMo on delivery
-            </li>
-            <li className="flex items-center gap-2.5 text-ink-soft">
-              <IconStore className="h-5 w-5 shrink-0 text-copper" />
-              Or collect free at City Plaza
-            </li>
-          </ul>
-
-          {/* Specs */}
-          {Object.keys(product.specs).length > 0 && (
+          {specs.length > 0 && (
             <div className="mt-8">
-              <h2 className="font-display text-lg font-semibold">Specifications</h2>
-              <dl className="mt-4 divide-y divide-line rounded-2xl border border-line bg-surface">
-                {Object.entries(product.specs).map(([key, value]) => (
-                  <div key={key} className="flex justify-between gap-4 px-5 py-3 text-sm">
+              <h2 className="font-display text-lg font-semibold">{t.specifications}</h2>
+              <dl className="mt-3 divide-y divide-line rounded-2xl border border-line bg-surface">
+                {specs.map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-4 px-4 py-3 text-sm">
                     <dt className="text-ink-faint">{key}</dt>
                     <dd className="text-right font-medium text-ink">{value}</dd>
                   </div>
@@ -220,21 +175,18 @@ export default async function ProductPage({
         </div>
       </div>
 
-      {/* Related */}
       {related.length > 0 && (
         <section aria-labelledby="related-heading" className="mt-20">
-          <Reveal>
-            <h2 id="related-heading" className="font-display text-2xl font-bold tracking-[-0.02em]">
-              You might also like
-            </h2>
-          </Reveal>
-          <div className="mt-8 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-4">
-            {related.map((item, index) => (
-              <Reveal key={item.id} delay={index * 60}>
+          <h2 id="related-heading" className="font-display text-2xl font-semibold tracking-[-0.02em]">
+            {t.related}
+          </h2>
+          <ul role="list" className="mt-6 grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-6 lg:grid-cols-4">
+            {related.map((item) => (
+              <li key={item.id}>
                 <ProductCard product={item} />
-              </Reveal>
+              </li>
             ))}
-          </div>
+          </ul>
         </section>
       )}
     </div>

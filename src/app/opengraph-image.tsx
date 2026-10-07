@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 import { BUSINESS } from "@/lib/constants";
 
-export const alt = `${BUSINESS.name} — Premium Kitchenware in Kigali, Rwanda`;
+export const alt = `${BUSINESS.name} — Kitchenware Shop in Kigali, Rwanda`;
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -71,9 +71,9 @@ export default function OpengraphImage() {
             color: "#5d564a",
           }}
         >
-          <span>Premium kitchenware · City Plaza, Kigali</span>
+          <span>Kitchenware shop · City Plaza, Kigali</span>
           <span style={{ color: "#a5552a", fontWeight: 600 }}>
-            Free delivery over 500,000 RWF
+            Pay cash or MoMo on delivery
           </span>
         </div>
       </div>

@@ -9,7 +9,7 @@ import { useLang } from "@/lib/i18n/LanguageProvider";
  * already applied the stored choice, so this only mirrors the current state
  * and flips it. Persists to localStorage (read back by that script).
  */
-export function ThemeToggle() {
+export function ThemeToggle({ withLabel = false }: { withLabel?: boolean }) {
   const { dict } = useLang();
   const [dark, setDark] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -38,19 +38,31 @@ export function ThemeToggle() {
     }
   }
 
+  const label = dark ? dict.theme.toLight : dict.theme.toDark;
+  // Render the moon until mounted so server + first client render match.
+  const icon = mounted && dark ? <IconSun className="h-5 w-5" /> : <IconMoon className="h-5 w-5" />;
+
+  if (withLabel) {
+    return (
+      <button
+        type="button"
+        onClick={toggle}
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 text-sm font-medium text-ink transition-colors duration-200 hover:bg-cream"
+      >
+        {icon}
+        {label}
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
       onClick={toggle}
-      aria-label={dark ? dict.theme.toLight : dict.theme.toDark}
-      className="cursor-pointer rounded-full p-2.5 text-ink transition-colors duration-200 hover:bg-cream active:scale-95"
+      aria-label={label}
+      className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink transition-colors duration-200 hover:bg-cream"
     >
-      {/* Render moon until mounted so server + first client render match. */}
-      {mounted && dark ? (
-        <IconSun className="h-5 w-5" />
-      ) : (
-        <IconMoon className="h-5 w-5" />
-      )}
+      {icon}
     </button>
   );
 }

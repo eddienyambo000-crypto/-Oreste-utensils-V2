@@ -1,134 +1,223 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { deleteProduct, saveProduct } from "@/app/admin/actions";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
+import { IconArrowRight, IconCamera, IconClose, IconExternal, IconGrid, IconTrash } from "@/components/ui/icons";
+import { formatRwf } from "@/lib/format";
 import { compressImage } from "@/lib/image";
-import { IconClose, IconPlus, IconTrash } from "@/components/ui/icons";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Product } from "@/lib/types";
 
-interface CategoryOption {
+export interface CategoryOption {
   slug: string;
   name: string;
+  /** Has a cover photo, so it shows as a department on the homepage. */
+  isDepartment: boolean;
 }
 
-function slugify(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-");
+const MAX_PHOTOS = 8;
+const BUCKET = "product-images";
+
+/**
+ * A photo slot. Uploads run in parallel but keep the order they were picked
+ * in, so the first photo taken stays the main one. `preview` is a local blob
+ * URL shown while uploading (and after, so the tile never flashes).
+ */
+interface Photo {
+  key: string;
+  status: "uploading" | "done" | "failed";
+  url?: string;
+  preview?: string;
+  file?: File;
+}
+
+function digitsOnly(value: string): string {
+  return value.replace(/\D/g, "").replace(/^0+(?=\d)/, "").slice(0, 9);
+}
+
+function groupDigits(digits: string): string {
+  return digits ? Number(digits).toLocaleString("en-US") : "";
 }
 
 export function ProductEditor({
   product,
   categories,
+  defaultCategory,
 }: {
   product?: Product;
   categories: CategoryOption[];
+  defaultCategory?: string;
 }) {
   const router = useRouter();
   const isEdit = Boolean(product);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const libraryRef = useRef<HTMLInputElement>(null);
+  const topRef = useRef<HTMLDivElement>(null);
+
+  const initialCategory =
+    product?.categorySlug ??
+    (categories.some((c) => c.slug === defaultCategory) ? defaultCategory : undefined) ??
+    categories.find((c) => c.isDepartment)?.slug ??
+    categories[0]?.slug ??
+    "";
 
   const [name, setName] = useState(product?.name ?? "");
-  const [slug, setSlug] = useState(product?.slug ?? "");
-  const [categorySlug, setCategorySlug] = useState<string>(
-    product?.categorySlug ?? categories[0]?.slug ?? "",
+  const [price, setPrice] = useState(product ? String(product.priceRwf) : "");
+  const [categorySlug, setCategorySlug] = useState(initialCategory);
+  const [description, setDescription] = useState(product?.description || product?.shortDescription || "");
+  const [photos, setPhotos] = useState<Photo[]>(
+    (product?.images ?? []).map((url) => ({ key: url, url, status: "done" })),
   );
-  const [priceRwf, setPriceRwf] = useState(String(product?.priceRwf ?? ""));
-  const [shortDescription, setShortDescription] = useState(
-    product?.shortDescription ?? "",
-  );
-  const [images, setImages] = useState<string[]>(product?.images ?? []);
-  const [featured, setFeatured] = useState(product?.featured ?? false);
   const [inStock, setInStock] = useState(product?.inStock ?? true);
+  const [featured, setFeatured] = useState(product?.featured ?? false);
 
-  const [uploading, setUploading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState<null | "save" | "another">(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [dirty, setDirty] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
-  function handleNameChange(value: string) {
-    setName(value);
-    // Keep the URL in sync with the name for new products; never change an
-    // existing product's slug (it would break its live link and SEO).
-    if (!isEdit) setSlug(slugify(value));
-  }
+  const uploading = photos.some((p) => p.status === "uploading");
+  const failed = photos.some((p) => p.status === "failed");
+  const doneUrls = photos.flatMap((p) => (p.status === "done" && p.url ? [p.url] : []));
 
-  async function handleFiles(files: FileList | null) {
-    if (!files || files.length === 0) return;
-    setUploading(true);
-    setError(null);
-    const supabase = createSupabaseBrowserClient();
-    const uploaded: string[] = [];
-
-    for (const original of Array.from(files)) {
-      const file = await compressImage(original);
-      const ext = file.name.split(".").pop() ?? "webp";
-      const path = `${slug || slugify(name) || "product"}/${crypto.randomUUID()}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("product-images")
-        .upload(path, file, { cacheControl: "31536000", upsert: false });
-      if (uploadError) {
-        setError(`Upload failed: ${uploadError.message}`);
-        continue;
-      }
-      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-      uploaded.push(data.publicUrl);
+  // Warn before leaving with unsaved work or photos still uploading.
+  useEffect(() => {
+    if (!dirty && !uploading) return;
+    function onBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
     }
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [dirty, uploading]);
 
-    setImages((prev) => [...prev, ...uploaded].slice(0, 8));
-    setUploading(false);
-    if (fileInputRef.current) fileInputRef.current.value = "";
+  // Free local previews when the editor goes away.
+  const photosRef = useRef(photos);
+  useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+  useEffect(
+    () => () => photosRef.current.forEach((p) => p.preview && URL.revokeObjectURL(p.preview)),
+    [],
+  );
+
+  function touch() {
+    setDirty(true);
+    setNotice(null);
   }
 
-  function removeImage(url: string) {
-    setImages((prev) => prev.filter((image) => image !== url));
+  async function upload(photo: Photo) {
+    if (!photo.file) return;
+    const supabase = createSupabaseBrowserClient();
+    const file = await compressImage(photo.file);
+    const ext = file.type === "image/webp" ? "webp" : (file.name.split(".").pop() ?? "jpg").toLowerCase();
+    const path = `products/${crypto.randomUUID()}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from(BUCKET)
+      .upload(path, file, { cacheControl: "31536000", upsert: false, contentType: file.type });
+    setPhotos((current) =>
+      current.map((p) => {
+        if (p.key !== photo.key) return p;
+        if (uploadError) return { ...p, status: "failed" };
+        const url = supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+        return { ...p, status: "done", url, file: undefined };
+      }),
+    );
   }
 
-  function setMainImage(url: string) {
-    setImages((prev) => [url, ...prev.filter((image) => image !== url)]);
-  }
-
-  async function handleSubmit(event: React.FormEvent) {
-    event.preventDefault();
+  function addFiles(list: FileList | File[] | null) {
+    const files = Array.from(list ?? []).filter((file) => file.type.startsWith("image/"));
+    if (files.length === 0) return;
+    const room = MAX_PHOTOS - photos.length;
+    const accepted = files.slice(0, Math.max(0, room));
+    if (files.length > accepted.length) {
+      setNotice(`A product can have up to ${MAX_PHOTOS} photos — ${files.length - accepted.length} not added.`);
+    }
+    const added: Photo[] = accepted.map((file) => ({
+      key: crypto.randomUUID(),
+      status: "uploading",
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setPhotos((current) => [...current, ...added]);
+    setDirty(true);
     setError(null);
-    setSaving(true);
+    added.forEach((photo) => void upload(photo));
+    if (cameraRef.current) cameraRef.current.value = "";
+    if (libraryRef.current) libraryRef.current.value = "";
+  }
 
-    const finalSlug = (isEdit ? slug : slugify(name)).trim() || slugify(name);
-    const shortText = shortDescription.trim();
+  function retry(photo: Photo) {
+    setPhotos((current) => current.map((p) => (p.key === photo.key ? { ...p, status: "uploading" } : p)));
+    void upload(photo);
+  }
 
+  function removePhoto(photo: Photo) {
+    if (photo.preview) URL.revokeObjectURL(photo.preview);
+    setPhotos((current) => current.filter((p) => p.key !== photo.key));
+    touch();
+  }
+
+  function makeMain(photo: Photo) {
+    setPhotos((current) => [photo, ...current.filter((p) => p.key !== photo.key)]);
+    touch();
+  }
+
+  function resetForNext(savedName: string) {
+    photos.forEach((p) => p.preview && URL.revokeObjectURL(p.preview));
+    setName("");
+    setPrice("");
+    setDescription("");
+    setPhotos([]);
+    setInStock(true);
+    setFeatured(false);
+    setDirty(false);
+    setNotice(`“${savedName}” is live. Add the next one.`);
+    topRef.current?.scrollIntoView({ block: "start" });
+  }
+
+  async function submit(mode: "save" | "another") {
+    setError(null);
+    setNotice(null);
+    if (uploading) return;
+    if (failed) {
+      setError("Some photos didn't upload. Tap Retry on them, or remove them.");
+      return;
+    }
+    setSaving(mode);
+    const savedName = name.trim();
     const result = await saveProduct({
       id: product?.id,
-      name: name.trim(),
-      slug: finalSlug,
+      name: savedName,
       categorySlug,
-      priceRwf: Number(priceRwf),
-      shortDescription: shortText,
-      // The product page reuses the same description — no second long field.
-      description: product?.description?.trim() || shortText,
-      images,
+      priceRwf: price,
+      description,
+      images: doneUrls,
       specs: product?.specs ?? {},
       featured,
       inStock,
     });
-
+    setSaving(null);
     if (!result.ok) {
       setError(result.error);
-      setSaving(false);
       return;
     }
-    router.push("/admin/products");
+    setDirty(false);
+    if (mode === "another") {
+      resetForNext(savedName);
+      return;
+    }
+    router.push(`/admin/products?saved=${encodeURIComponent(savedName)}`);
     router.refresh();
   }
 
   async function handleDelete() {
     if (!product) return;
-    if (!window.confirm(`Delete "${product.name}"? This can't be undone.`)) return;
+    if (!window.confirm(`Delete “${product.name}”? It disappears from the shop straight away.`)) return;
     setDeleting(true);
     const result = await deleteProduct(product.id);
     if (!result.ok) {
@@ -136,203 +225,414 @@ export function ProductEditor({
       setDeleting(false);
       return;
     }
+    setDirty(false);
     router.push("/admin/products");
     router.refresh();
   }
 
+  const departments = categories.filter((c) => c.isDepartment);
+  const others = categories.filter((c) => !c.isDepartment);
   const fieldClass =
-    "mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink placeholder:text-ink-faint";
+    "mt-1.5 min-h-12 w-full rounded-xl border border-line-strong bg-porcelain px-4 text-base text-ink placeholder:text-ink-faint";
+  const busy = saving !== null || deleting;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <div className="flex items-center justify-between gap-4">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        void submit("save");
+      }}
+      className="mx-auto max-w-2xl"
+    >
+      <div ref={topRef} className="scroll-mt-24" />
+      <Link
+        href="/admin/products"
+        className="inline-flex min-h-11 items-center text-sm font-medium text-ink-soft transition-colors duration-200 hover:text-copper"
+      >
+        ← Products
+      </Link>
+      <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold tracking-[-0.02em]">
-          {isEdit ? "Edit product" : "New product"}
+          {isEdit ? "Edit product" : "Add a product"}
         </h1>
-        {isEdit && (
-          <button
-            type="button"
-            onClick={handleDelete}
-            disabled={deleting}
-            className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-strong px-4 py-2 text-sm font-medium text-ink-soft transition-colors duration-200 hover:border-copper-deep hover:text-copper-deep disabled:opacity-60"
-          >
-            <IconTrash className="h-4 w-4" />
-            {deleting ? "Deleting…" : "Delete"}
-          </button>
+        {product && (
+          <div className="flex items-center gap-2">
+            <a
+              href={`/product/${product.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line-strong px-4 text-sm font-medium text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
+            >
+              View in shop
+              <IconExternal className="h-4 w-4" />
+            </a>
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={busy}
+              aria-label={`Delete ${product.name}`}
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-line-strong text-ink-soft transition-colors duration-200 hover:border-copper-deep hover:text-copper-deep disabled:opacity-60"
+            >
+              <IconTrash className="h-5 w-5" />
+            </button>
+          </div>
         )}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
-        <div className="space-y-5">
-          {/* Images */}
-          <div className="rounded-2xl border border-line bg-surface p-5">
-            <span className="text-sm font-medium text-ink">Images</span>
-            <div className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-              {images.map((url, index) => (
-                <div
-                  key={url}
-                  className="relative aspect-square overflow-hidden rounded-xl border border-line bg-cream"
-                >
-                  <Image src={url} alt="" fill sizes="120px" className="object-cover" />
-                  {index === 0 ? (
-                    <span className="absolute left-1.5 top-1.5 rounded-md bg-copper px-1.5 py-0.5 text-[0.6rem] font-semibold text-white shadow-sm">
+      {notice && (
+        <p role="status" className="mt-4 rounded-xl border border-sage/30 bg-sage/10 px-4 py-3 text-sm font-medium text-ink">
+          {notice}
+        </p>
+      )}
+
+      {/* Photos */}
+      <section
+        aria-labelledby="photos-label"
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          addFiles(event.dataTransfer.files);
+        }}
+        className={`mt-6 rounded-2xl border bg-surface p-4 sm:p-5 ${dragging ? "border-copper" : "border-line"}`}
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 id="photos-label" className="font-medium text-ink">
+            Photos
+          </h2>
+          <span className="text-xs tabular-nums text-ink-faint">
+            {photos.length}/{MAX_PHOTOS}
+          </span>
+        </div>
+
+        {photos.length > 0 && (
+          <ul role="list" className="mt-3 grid grid-cols-3 gap-2.5 sm:grid-cols-4">
+            {photos.map((photo, index) => (
+              <li key={photo.key} className="relative aspect-square overflow-hidden rounded-xl border border-line bg-cream">
+                {photo.preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- local preview (blob: URL)
+                  <img src={photo.preview} alt="" className="h-full w-full object-cover" />
+                ) : photo.url ? (
+                  <Image src={photo.url} alt="" fill sizes="160px" className="object-cover" />
+                ) : null}
+
+                {photo.status === "uploading" && (
+                  <span className="absolute inset-0 flex items-center justify-center bg-ink/35">
+                    <span className="h-7 w-7 rounded-full border-[3px] border-white/40 border-t-white motion-safe:animate-spin" />
+                    <span className="sr-only">Uploading</span>
+                  </span>
+                )}
+                {photo.status === "failed" && (
+                  <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-ink/60 p-2 text-center">
+                    <span className="text-xs font-medium text-white">Upload failed</span>
+                    <button
+                      type="button"
+                      onClick={() => retry(photo)}
+                      className="min-h-9 cursor-pointer rounded-full bg-white px-3 text-xs font-semibold text-ink active:scale-95"
+                    >
+                      Retry
+                    </button>
+                  </span>
+                )}
+
+                {photo.status === "done" &&
+                  (index === 0 ? (
+                    <span className="absolute bottom-1.5 left-1.5 rounded-md bg-ink/80 px-1.5 py-0.5 text-[0.65rem] font-semibold text-porcelain">
                       Main
                     </span>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setMainImage(url)}
-                      className="absolute bottom-1.5 left-1.5 cursor-pointer rounded-md bg-ink/75 px-1.5 py-0.5 text-[0.6rem] font-medium text-porcelain backdrop-blur-sm transition-colors duration-150 hover:bg-ink active:scale-95"
+                      onClick={() => makeMain(photo)}
+                      className="absolute bottom-1.5 left-1.5 min-h-7 cursor-pointer rounded-md bg-ink/70 px-1.5 text-[0.65rem] font-medium text-porcelain transition-colors duration-150 hover:bg-ink active:scale-95"
                     >
-                      Set main
+                      Make main
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(url)}
-                    aria-label="Remove image"
-                    className="absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-ink/75 text-porcelain shadow-sm backdrop-blur-sm transition-colors duration-150 hover:bg-copper-deep active:scale-90"
-                  >
-                    <IconClose className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {images.length < 8 && (
+                  ))}
                 <button
                   type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-line-strong text-ink-faint transition-colors duration-200 hover:border-copper hover:bg-copper-tint/20 hover:text-copper disabled:opacity-60"
+                  onClick={() => removePhoto(photo)}
+                  aria-label={`Remove photo ${index + 1}`}
+                  className="absolute right-1 top-1 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-porcelain active:scale-90"
                 >
-                  <IconPlus className="h-6 w-6" />
-                  <span className="text-xs font-medium">{uploading ? "Uploading…" : "Add photo"}</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink/75 transition-colors duration-150 hover:bg-copper-deep">
+                    <IconClose className="h-4 w-4" />
+                  </span>
                 </button>
-              )}
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {photos.length < MAX_PHOTOS && (
+          <div className="mt-3 grid grid-cols-2 gap-2.5 pointer-fine:grid-cols-1">
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              className="flex min-h-14 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl bg-ink px-3 text-[0.9375rem] font-semibold text-porcelain transition-[background-color,transform] duration-200 hover:bg-ink/85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] pointer-fine:hidden"
+            >
+              <IconCamera className="h-5 w-5" />
+              Take photo
+            </button>
+            <button
+              type="button"
+              onClick={() => libraryRef.current?.click()}
+              className="flex min-h-14 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl border-2 border-dashed border-line-strong px-3 text-[0.9375rem] font-semibold text-ink transition-colors duration-200 hover:border-copper hover:text-copper focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98]"
+            >
+              <IconGrid className="h-5 w-5" />
+              <span className="pointer-coarse:hidden">Upload photos or drop them here</span>
+              <span className="pointer-fine:hidden">From gallery</span>
+            </button>
+          </div>
+        )}
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          onChange={(event) => addFiles(event.target.files)}
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden
+        />
+        <input
+          ref={libraryRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(event) => addFiles(event.target.files)}
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden
+        />
+        <p className="mt-3 text-xs leading-relaxed text-ink-faint">
+          The first photo is the one shoppers see first. Photos are resized automatically — upload
+          them straight from the camera.
+        </p>
+      </section>
+
+      <div className="mt-6 space-y-5">
+        <div>
+          <label htmlFor="name" className="text-sm font-medium text-ink">
+            Product name
+          </label>
+          <input
+            id="name"
+            type="text"
+            required
+            minLength={2}
+            maxLength={200}
+            autoComplete="off"
+            enterKeyHint="next"
+            value={name}
+            onChange={(event) => {
+              setName(event.target.value);
+              touch();
+            }}
+            className={fieldClass}
+            placeholder="e.g. Electric kettle 1.8 L"
+          />
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label htmlFor="price" className="text-sm font-medium text-ink">
+              Price
+            </label>
+            <div className="relative">
+              <input
+                id="price"
+                type="text"
+                inputMode="numeric"
+                required
+                autoComplete="off"
+                enterKeyHint="next"
+                value={groupDigits(price)}
+                onChange={(event) => {
+                  setPrice(digitsOnly(event.target.value));
+                  touch();
+                }}
+                aria-describedby="price-unit"
+                className={`${fieldClass} pr-16 tabular-nums`}
+                placeholder="25,000"
+              />
+              <span
+                id="price-unit"
+                className="pointer-events-none absolute right-4 top-1/2 mt-[3px] -translate-y-1/2 text-sm font-medium text-ink-faint"
+              >
+                RWF
+              </span>
             </div>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={(event) => handleFiles(event.target.files)}
-              className="hidden"
-            />
-            <p className="mt-3 text-xs text-ink-faint">
-              Tap <span className="font-medium text-ink-soft">Add photo</span> to upload (up
-              to 8). The <span className="font-medium text-ink-soft">Main</span> photo shows
-              first — tap &ldquo;Set main&rdquo; on any other to promote it. Tap the ✕ to
-              remove.
-            </p>
           </div>
 
           <div>
-            <label htmlFor="name" className="text-sm font-medium text-ink">
-              Product name
+            <label htmlFor="category" className="text-sm font-medium text-ink">
+              Category
             </label>
-            <input
-              id="name"
-              type="text"
+            <select
+              id="category"
               required
-              value={name}
-              onChange={(event) => handleNameChange(event.target.value)}
-              className={fieldClass}
-              placeholder="e.g. Ember Enamelled Dutch Oven — 5.2 L"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="short" className="text-sm font-medium text-ink">
-              Description
-            </label>
-            <textarea
-              id="short"
-              required
-              rows={3}
-              value={shortDescription}
-              onChange={(event) => setShortDescription(event.target.value)}
-              className={`${fieldClass} resize-y`}
-              placeholder="A line or two about this item — what it is and why it's good. Shows on the shop and helps Google find it."
-            />
-            <p className="mt-1 text-xs text-ink-faint">
-              Keep it short. This is all customers and search engines need.
-            </p>
+              value={categorySlug}
+              onChange={(event) => {
+                setCategorySlug(event.target.value);
+                touch();
+              }}
+              className={`${fieldClass} cursor-pointer`}
+            >
+              {departments.length > 0 && others.length > 0 ? (
+                <>
+                  <optgroup label="Departments">
+                    {departments.map((c) => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="Other categories">
+                    {others.map((c) => (
+                      <option key={c.slug} value={c.slug}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                </>
+              ) : (
+                categories.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.name}
+                  </option>
+                ))
+              )}
+            </select>
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-5 lg:sticky lg:top-6 lg:self-start">
-          <div className="space-y-5 rounded-2xl border border-line bg-surface p-5">
-            <div>
-              <label htmlFor="category" className="text-sm font-medium text-ink">
-                Category
-              </label>
-              <select
-                id="category"
-                value={categorySlug}
-                onChange={(event) => setCategorySlug(event.target.value)}
-                className={`${fieldClass} cursor-pointer`}
-              >
-                {categories.map((category) => (
-                  <option key={category.slug} value={category.slug}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div>
+          <label htmlFor="description" className="text-sm font-medium text-ink">
+            Description <span className="font-normal text-ink-faint">(optional)</span>
+          </label>
+          <textarea
+            id="description"
+            rows={4}
+            maxLength={2000}
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              touch();
+            }}
+            className={`${fieldClass} resize-y py-3`}
+            placeholder="Size, material, what it's good for. Helps customers decide and helps Google find it."
+          />
+        </div>
 
-            <div>
-              <label htmlFor="price" className="text-sm font-medium text-ink">
-                Price (RWF)
-              </label>
-              <input
-                id="price"
-                type="number"
-                min={0}
-                step={500}
-                required
-                value={priceRwf}
-                onChange={(event) => setPriceRwf(event.target.value)}
-                className={`${fieldClass} tabular-nums`}
-                placeholder="145000"
-              />
-            </div>
+        <div className="divide-y divide-line rounded-2xl border border-line bg-surface">
+          <Toggle
+            id="in-stock"
+            label="In stock"
+            hint={inStock ? "Customers can add it to their cart." : "Shown as sold out; customers can ask about it."}
+            checked={inStock}
+            onChange={(value) => {
+              setInStock(value);
+              touch();
+            }}
+          />
+          <Toggle
+            id="featured"
+            label="Show on homepage"
+            hint="Starred products fill the homepage row. With none starred, the newest show."
+            checked={featured}
+            onChange={(value) => {
+              setFeatured(value);
+              touch();
+            }}
+          />
+        </div>
+      </div>
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink">In stock</span>
-              <input
-                type="checkbox"
-                checked={inStock}
-                onChange={(event) => setInStock(event.target.checked)}
-                className="h-5 w-5 cursor-pointer accent-copper"
-              />
-            </label>
+      {error && (
+        <p role="alert" className="mt-5 rounded-xl bg-copper-tint/60 px-4 py-3 text-sm font-medium text-copper-deep">
+          {error}
+        </p>
+      )}
 
-            <label className="flex cursor-pointer items-center justify-between gap-3">
-              <span className="text-sm font-medium text-ink">Featured on homepage</span>
-              <input
-                type="checkbox"
-                checked={featured}
-                onChange={(event) => setFeatured(event.target.checked)}
-                className="h-5 w-5 cursor-pointer accent-copper"
-              />
-            </label>
-          </div>
-
-          {error && (
-            <p role="alert" className="rounded-xl bg-copper-tint/50 px-4 py-3 text-sm text-copper-deep">
-              {error}
-            </p>
+      {/* Sticks to the bottom of the screen while scrolling a long form. */}
+      <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t border-line bg-porcelain/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:mx-0 sm:rounded-t-2xl sm:px-0">
+        {price && !error && (
+          <p className="mb-2 text-center text-xs text-ink-faint sm:text-left">
+            Shows in the shop as <span className="font-semibold text-ink">{formatRwf(Number(price))}</span>
+            {photos.length === 0 && " · no photo yet"}
+          </p>
+        )}
+        <div className="flex gap-2.5">
+          {!isEdit && (
+            <button
+              type="button"
+              onClick={() => void submit("another")}
+              disabled={busy || uploading}
+              className="min-h-12 flex-1 cursor-pointer rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-ink transition-colors duration-200 hover:border-copper hover:text-copper disabled:cursor-wait disabled:opacity-60"
+            >
+              {saving === "another" ? "Saving…" : "Save & add another"}
+            </button>
           )}
-
           <button
             type="submit"
-            disabled={saving || uploading}
-            className="w-full cursor-pointer rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+            disabled={busy || uploading}
+            className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-5 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
           >
-            {saving ? "Saving…" : isEdit ? "Save changes" : "Create product"}
+            {uploading ? "Uploading photos…" : saving === "save" ? "Saving…" : isEdit ? "Save changes" : "Save product"}
+            {!uploading && saving === null && <IconArrowRight className="h-4 w-4" />}
           </button>
         </div>
       </div>
     </form>
+  );
+}
+
+function Toggle({
+  id,
+  label,
+  hint,
+  checked,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+      <div className="min-w-0">
+        <span id={`${id}-label`} className="block font-medium text-ink">
+          {label}
+        </span>
+        <span id={`${id}-hint`} className="mt-0.5 block text-xs leading-relaxed text-ink-faint">
+          {hint}
+        </span>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-labelledby={`${id}-label`}
+        aria-describedby={`${id}-hint`}
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-8 w-14 shrink-0 cursor-pointer items-center rounded-full transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper ${
+          checked ? "bg-sage" : "bg-line-strong"
+        }`}
+      >
+        <span
+          aria-hidden
+          className={`inline-block h-6 w-6 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+            checked ? "translate-x-7" : "translate-x-1"
+          }`}
+        />
+      </button>
+    </div>
   );
 }

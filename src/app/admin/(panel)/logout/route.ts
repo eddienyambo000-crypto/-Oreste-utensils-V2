@@ -1,11 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { SITE_URL } from "@/lib/constants";
 
-export async function POST() {
+export async function POST(request: NextRequest) {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
-  return NextResponse.redirect(new URL("/admin/login", SITE_URL), {
+  // Same origin as the request, so signing out locally stays local.
+  return NextResponse.redirect(new URL("/admin/login", request.url), {
     status: 303,
   });
 }

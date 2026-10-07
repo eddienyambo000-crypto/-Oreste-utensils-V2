@@ -38,6 +38,8 @@ export function buildOrderMessage(input: {
   fulfillment: Fulfillment;
   deliveryArea: string | null;
   note: string | null;
+  /** Order reference from the database, so the shop can match message to record. */
+  reference?: string | null;
 }): string {
   const subtotal = input.items.reduce(
     (sum, item) => sum + item.priceRwf * item.quantity,
@@ -47,7 +49,9 @@ export function buildOrderMessage(input: {
     input.fulfillment === "delivery" && subtotal >= FREE_DELIVERY_THRESHOLD_RWF;
 
   const lines = [
-    "New order — oresteutensils.com",
+    input.reference
+      ? `New order ${input.reference} — oresteutensils.com`
+      : "New order — oresteutensils.com",
     "",
     ...input.items.map(
       (item) =>

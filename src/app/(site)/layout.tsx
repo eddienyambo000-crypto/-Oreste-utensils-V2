@@ -1,6 +1,7 @@
 import { CartProvider } from "@/components/cart/CartProvider";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { CartToast } from "@/components/cart/CartToast";
+import { ConsentBanner } from "@/components/layout/ConsentBanner";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -26,11 +27,6 @@ function StoreJsonLd() {
       addressLocality: BUSINESS.address.city,
       addressCountry: BUSINESS.address.countryCode,
     },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: BUSINESS.geo.latitude,
-      longitude: BUSINESS.geo.longitude,
-    },
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: [
@@ -46,7 +42,6 @@ function StoreJsonLd() {
       closes: BUSINESS.hours.closes,
     },
     sameAs: [BUSINESS.instagram],
-    priceRange: "RWF",
     currenciesAccepted: "RWF",
     paymentAccepted: "Cash, Mobile Money",
   };
@@ -87,6 +82,7 @@ export default async function SiteLayout({
         <CartToast />
         <WhatsAppButton />
         <MobileNav />
+        <ConsentBanner />
       </CartProvider>
     </LanguageProvider>
   );

@@ -4,7 +4,7 @@ import type { Testimonial } from "@/lib/types";
 export function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
     <figure className="flex h-full flex-col rounded-2xl border border-line bg-surface p-6 shadow-card">
-      <div className="flex gap-0.5 text-copper" aria-label={`${testimonial.rating} out of 5 stars`}>
+      <div role="img" className="flex gap-0.5 text-copper" aria-label={`${testimonial.rating} out of 5 stars`}>
         {Array.from({ length: 5 }).map((_, i) => (
           <span key={i} aria-hidden className={i < testimonial.rating ? "" : "text-line-strong"}>
             ★
@@ -19,7 +19,7 @@ export function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
           {testimonial.photo && (
             <Image
               src={testimonial.photo}
-              alt={testimonial.clientName}
+              alt=""
               fill
               sizes="44px"
               className="object-cover"

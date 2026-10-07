@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { z } from "zod";
 import {
   FREE_DELIVERY_THRESHOLD_RWF,
   SITE_IMAGE_KEYS,
@@ -6,7 +7,26 @@ import {
 } from "./constants";
 import { seedCategories, seedProducts } from "./seed";
 import { getPublicClient, isSupabaseConfigured } from "./supabase/public";
-import type { Category, CategorySlug, Product } from "./types";
+import type { Category, Product } from "./types";
+
+/**
+ * Parse, don't trust: validate Supabase rows at the boundary with Zod and drop
+ * anything malformed, so a bad/renamed column fails loudly in dev and degrades
+ * gracefully in prod instead of surfacing as a cryptic error three components
+ * deep.
+ */
+function validRows<S extends z.ZodType>(schema: S, data: unknown): z.infer<S>[] {
+  if (!Array.isArray(data)) return [];
+  const rows: z.infer<S>[] = [];
+  for (const row of data) {
+    const parsed = schema.safeParse(row);
+    if (parsed.success) rows.push(parsed.data);
+    else if (process.env.NODE_ENV !== "production") {
+      console.warn("[data] dropped malformed row:", parsed.error.issues[0]?.message);
+    }
+  }
+  return rows;
+}
 
 /**
  * Cache tag for the shared catalog. The site reads the locale cookie for i18n,
@@ -20,34 +40,50 @@ export const CATALOG_TAG = "catalog";
 const CATALOG_REVALIDATE = 300;
 
 /**
+ * The bundled seed catalog powers local development, CI builds and demos. It
+ * is never served by the production deployment: if the database is missing
+ * there, catalog reads throw (and the pages show an honest "catalog
+ * unavailable" state) instead of quietly displaying invented products.
+ */
+function servesSeedCatalog(): boolean {
+  if (isSupabaseConfigured) return false;
+  if (process.env.VERCEL_ENV === "production") {
+    throw new Error("Catalog database is not configured for production.");
+  }
+  return true;
+}
+
+/**
  * Catalog data access. Reads from Supabase when configured, otherwise from
  * the typed seed catalog — so the site runs end-to-end without any keys.
  */
 
-interface ProductRow {
-  id: string;
-  name: string;
-  slug: string;
-  category_slug: CategorySlug;
-  price_rwf: number;
-  short_description: string;
-  description: string;
-  specs: Record<string, string>;
-  images: string[];
-  featured: boolean;
-  in_stock: boolean;
-  created_at: string;
-}
+const productRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  category_slug: z.string(),
+  price_rwf: z.coerce.number(),
+  short_description: z.string().nullish().transform((v) => v ?? ""),
+  description: z.string().nullish().transform((v) => v ?? ""),
+  specs: z.record(z.string(), z.string()).nullish().transform((v) => v ?? {}),
+  images: z.array(z.string()).nullish().transform((v) => v ?? []),
+  featured: z.boolean().nullish().transform((v) => v ?? false),
+  in_stock: z.boolean().nullish().transform((v) => v ?? true),
+  created_at: z.string(),
+});
+type ProductRow = z.infer<typeof productRowSchema>;
 
-interface CategoryRow {
-  id: string;
-  name: string;
-  slug: CategorySlug;
-  description: string;
-  intro: string;
-  image: string;
-  sort_order: number;
-}
+const categoryRowSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().nullish().transform((v) => v ?? ""),
+  intro: z.string().nullish().transform((v) => v ?? ""),
+  image: z.string().nullish().transform((v) => v ?? ""),
+  sort_order: z.coerce.number().nullish().transform((v) => v ?? 0),
+});
+type CategoryRow = z.infer<typeof categoryRowSchema>;
 
 function mapProduct(row: ProductRow): Product {
   return {
@@ -80,7 +116,7 @@ function mapCategory(row: CategoryRow): Category {
 
 export const getCategories = unstable_cache(
   async (): Promise<Category[]> => {
-    if (!isSupabaseConfigured) {
+    if (servesSeedCatalog()) {
       return [...seedCategories].sort((a, b) => a.sortOrder - b.sortOrder);
     }
     const { data, error } = await getPublicClient()
@@ -88,7 +124,7 @@ export const getCategories = unstable_cache(
       .select("*")
       .order("sort_order");
     if (error) throw new Error(`Failed to load categories: ${error.message}`);
-    return (data as CategoryRow[]).map(mapCategory);
+    return validRows(categoryRowSchema, data).map(mapCategory);
   },
   ["categories"],
   { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
@@ -108,7 +144,7 @@ export const getProducts = unstable_cache(
   }): Promise<Product[]> => {
     let products: Product[];
 
-    if (!isSupabaseConfigured) {
+    if (servesSeedCatalog()) {
       products = [...seedProducts];
     } else {
       let query = getPublicClient()
@@ -123,7 +159,7 @@ export const getProducts = unstable_cache(
       }
       const { data, error } = await query;
       if (error) throw new Error(`Failed to load products: ${error.message}`);
-      return (data as ProductRow[]).map(mapProduct);
+      return validRows(productRowSchema, data).map(mapProduct);
     }
 
     if (filter?.categorySlug) {
@@ -139,7 +175,7 @@ export const getProducts = unstable_cache(
 );
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
-  if (!isSupabaseConfigured) {
+  if (servesSeedCatalog()) {
     return seedProducts.find((p) => p.slug === slug) ?? null;
   }
   const { data, error } = await getPublicClient()
@@ -148,7 +184,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw new Error(`Failed to load product: ${error.message}`);
-  return data ? mapProduct(data as ProductRow) : null;
+  const parsed = productRowSchema.safeParse(data);
+  return parsed.success ? mapProduct(parsed.data) : null;
 }
 
 export async function getRelatedProducts(
@@ -193,16 +230,16 @@ export async function getLogoUrl(): Promise<string | null> {
   return value ? value : null;
 }
 
-interface TestimonialRow {
-  id: string;
-  client_name: string;
-  business: string | null;
-  quote: string;
-  photo: string | null;
-  rating: number;
-  sort_order: number;
-  created_at: string;
-}
+const testimonialRowSchema = z.object({
+  id: z.string(),
+  client_name: z.string(),
+  business: z.string().nullish().transform((v) => v ?? null),
+  quote: z.string(),
+  photo: z.string().nullish().transform((v) => v ?? null),
+  rating: z.coerce.number().nullish().transform((v) => v ?? 5),
+  sort_order: z.coerce.number().nullish().transform((v) => v ?? 0),
+  created_at: z.string(),
+});
 
 export const getTestimonials = unstable_cache(
   async (): Promise<import("./types").Testimonial[]> => {
@@ -214,7 +251,7 @@ export const getTestimonials = unstable_cache(
       .order("created_at", { ascending: false });
     // Table may not exist yet (migration pending) — fail soft.
     if (error) return [];
-    return (data as TestimonialRow[]).map((row) => ({
+    return validRows(testimonialRowSchema, data).map((row) => ({
       id: row.id,
       clientName: row.client_name,
       business: row.business,
@@ -229,61 +266,31 @@ export const getTestimonials = unstable_cache(
   { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
 );
 
-/**
- * Hand-picked homepage slider images, curated by the admin (stored as JSON in
- * ou_settings). Empty array = fall back to auto (latest products with photos).
- */
-export async function getMarqueeSlides(): Promise<
-  import("./types").MarqueeSlide[]
-> {
-  if (!isSupabaseConfigured) return [];
-  const { data } = await getPublicClient()
-    .from("ou_settings")
-    .select("value")
-    .eq("key", "marquee_slides")
-    .maybeSingle();
-  const raw = data?.value?.trim();
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed
-      .filter(
-        (s): s is Record<string, unknown> =>
-          !!s && typeof s.url === "string" && s.url.length > 0,
-      )
-      .map((s) => ({
-        url: s.url as string,
-        name: typeof s.name === "string" && s.name ? s.name : undefined,
-        price:
-          typeof s.price === "number" && Number.isFinite(s.price) && s.price > 0
-            ? s.price
-            : undefined,
-        link: typeof s.link === "string" && s.link ? s.link : undefined,
-      }));
-  } catch {
-    return [];
-  }
-}
-
 export type SiteImages = Record<SiteImageKey, string>;
 
-/** Editable site photos — admin overrides from ou_settings, else the bundled defaults. */
+/**
+ * Editable site photos. An uploaded photo wins; an unset slot falls back to
+ * the next real upload (about → shop section → main photo) before any bundled
+ * default, so a single real shop photo replaces every stock image.
+ */
 export async function getSiteImages(): Promise<SiteImages> {
-  const result = { ...SITE_IMAGE_KEYS } as SiteImages;
-  if (!isSupabaseConfigured) return result;
-  const keys = Object.keys(SITE_IMAGE_KEYS);
-  const { data } = await getPublicClient()
-    .from("ou_settings")
-    .select("key, value")
-    .in("key", keys);
-  for (const row of (data as { key: string; value: string }[] | null) ?? []) {
-    const value = row.value?.trim();
-    if (value && row.key in result) {
-      result[row.key as SiteImageKey] = value;
+  const set: Partial<Record<SiteImageKey, string>> = {};
+  if (isSupabaseConfigured) {
+    const { data } = await getPublicClient()
+      .from("ou_settings")
+      .select("key, value")
+      .in("key", Object.keys(SITE_IMAGE_KEYS));
+    for (const row of (data as { key: string; value: string }[] | null) ?? []) {
+      const value = row.value?.trim();
+      if (value && row.key in SITE_IMAGE_KEYS) set[row.key as SiteImageKey] = value;
     }
   }
-  return result;
+  return {
+    hero_image: set.hero_image ?? SITE_IMAGE_KEYS.hero_image,
+    story_image_1: set.story_image_1 ?? set.hero_image ?? SITE_IMAGE_KEYS.story_image_1,
+    about_image:
+      set.about_image ?? set.story_image_1 ?? set.hero_image ?? SITE_IMAGE_KEYS.about_image,
+  };
 }
 
 /** Looker Studio dashboard embed URL for the admin Analytics page, if set. */

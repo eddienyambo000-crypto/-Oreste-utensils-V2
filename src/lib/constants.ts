@@ -17,7 +17,6 @@ export const BUSINESS = {
     countryCode: "RW",
   },
   /** Approximate coordinates of City Plaza, central Kigali. */
-  geo: { latitude: -1.9441, longitude: 30.0619 },
   phoneDisplay: "+250 783 399 163",
   phoneE164: "+250783399163",
   whatsappNumber: "250783399163",
@@ -40,43 +39,26 @@ export const SITE_URL = (
 /** Orders at or above this subtotal get free delivery across Kigali (RWF). */
 export const FREE_DELIVERY_THRESHOLD_RWF = 500_000;
 
-/**
- * Indicative delivery fees by Kigali zone (RWF). Shown on the FAQ and at
- * checkout to answer "what will delivery cost me?" up front. Final fee is
- * confirmed on WhatsApp by exact location — adjust these to the store's real
- * rates (they're just edited here, no deploy logic elsewhere depends on them).
- */
-export const DELIVERY = {
-  zones: [
-    { area: "City centre — Nyarugenge, Muhima, Nyamirambo", fee: 1_500 },
-    { area: "Kacyiru, Kimihurura, Remera, Gisozi, Kimironko, Kibagabaga", fee: 2_000 },
-    { area: "Kicukiro, Gikondo, Gatenga, Niboye", fee: 2_500 },
-    { area: "Gacuriro, Kanombe, Bumbogo & outer Kigali", fee: 3_000 },
-  ],
-} as const;
-
 export const CART_STORAGE_KEY = "oreste-cart-v1";
 
 /**
- * Editable site photos. Keys map to rows in ou_settings; defaults are the
- * bundled images. The admin can swap any of these from Settings → Site photos.
+ * Editable site photos. Keys map to rows in ou_settings (key names are kept
+ * stable for stored values); defaults are bundled photos without people. A
+ * real upload falls back down the chain in getSiteImages, so one shop photo
+ * is enough to replace every stock image.
  */
 export const SITE_IMAGE_KEYS = {
   hero_image: "/images/hero-kitchen.webp",
-  story_image_1: "/images/story-cooking.webp",
-  story_image_2: "/images/story-searing.webp",
-  about_image: "/images/about-kitchen.webp",
-  visit_image: "/images/visit-kitchen.webp",
+  story_image_1: "/images/kitchen-default.webp",
+  about_image: "/images/kitchen-default.webp",
 } as const;
 
 export type SiteImageKey = keyof typeof SITE_IMAGE_KEYS;
 
 export const SITE_IMAGE_LABELS: Record<SiteImageKey, string> = {
-  hero_image: "Homepage hero",
-  story_image_1: "Story photo (left)",
-  story_image_2: "Story photo (right)",
+  hero_image: "Homepage — main photo",
+  story_image_1: "Homepage — shop & delivery photo",
   about_image: "About page photo",
-  visit_image: "Visit-the-store photo",
 };
 
 export const KIGALI_AREAS = [

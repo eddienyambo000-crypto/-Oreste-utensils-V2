@@ -8,16 +8,17 @@ import { FreeDeliveryMeter } from "./FreeDeliveryMeter";
 import {
   IconArrowRight,
   IconBag,
+  IconCheck,
   IconMinus,
   IconPlus,
   IconTrash,
   IconWhatsApp,
 } from "@/components/ui/icons";
-import { DeliveryZones } from "@/components/layout/DeliveryZones";
-import { IconChevronDown } from "@/components/ui/icons";
+import { trackEvent } from "@/lib/analytics";
 import { KIGALI_AREAS } from "@/lib/constants";
 import { formatRwf } from "@/lib/format";
 import { useLang } from "@/lib/i18n/LanguageProvider";
+import { orderReference } from "@/lib/orders";
 import type { Fulfillment } from "@/lib/types";
 import { buildOrderMessage, whatsappLink } from "@/lib/whatsapp";
 
@@ -33,13 +34,65 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
   const [customerName, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [fulfillment, setFulfillment] = useState<Fulfillment>("delivery");
-  const [deliveryArea, setDeliveryArea] = useState<string>(KIGALI_AREAS[0]);
+  // No default area: a pre-selected district gets submitted by people who never noticed it.
+  const [deliveryArea, setDeliveryArea] = useState<string>("");
   const [note, setNote] = useState("");
   const [company, setCompany] = useState(""); // honeypot
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [placed, setPlaced] = useState<{
+    reference: string | null;
+    whatsapp: string;
+    items: typeof items;
+    subtotal: number;
+  } | null>(null);
 
   const freeDelivery = fulfillment === "pickup" || subtotal >= freeDeliveryThreshold;
+
+  if (placed) {
+    return (
+      <div role="status" className="mx-auto max-w-xl rounded-3xl border border-line bg-surface p-6 sm:p-10">
+        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-sage/15 text-sage">
+          <IconCheck className="h-6 w-6" />
+        </span>
+        <h2 className="mt-5 font-display text-2xl font-semibold tracking-[-0.01em]">{t.placedTitle}</h2>
+        <p className="mt-2 leading-relaxed text-ink-soft">{t.placedBody}</p>
+        {placed.reference && (
+          <p className="mt-4 text-sm text-ink-soft">
+            {t.reference}: <span className="font-mono font-semibold tracking-wide text-ink">{placed.reference}</span>
+          </p>
+        )}
+        <a
+          href={placed.whatsapp}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-ink px-6 font-semibold text-porcelain transition-colors duration-200 hover:bg-ink/85"
+        >
+          <IconWhatsApp className="h-5 w-5" />
+          {t.sendOnWhatsapp}
+        </a>
+        <ul className="mt-6 divide-y divide-line border-y border-line text-sm">
+          {placed.items.map((item) => (
+            <li key={item.productId} className="flex justify-between gap-4 py-2.5">
+              <span className="text-ink-soft">
+                {item.name} × {item.quantity}
+              </span>
+              <span className="shrink-0 font-medium tabular-nums">{formatRwf(item.priceRwf * item.quantity)}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 flex justify-between text-sm font-semibold">
+          <span>{dict.cart.subtotal}</span>
+          <span className="tabular-nums">{formatRwf(placed.subtotal)}</span>
+        </p>
+        <p className="mt-4 text-xs leading-relaxed text-ink-faint">{t.notPaid}</p>
+        <Link href="/shop" className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-copper hover:text-copper-deep">
+          {dict.cart.continueShopping}
+          <IconArrowRight className="h-4 w-4" />
+        </Link>
+      </div>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -64,6 +117,11 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
     event.preventDefault();
     setError(null);
     setSubmitting(true);
+    trackEvent("begin_checkout", {
+      currency: "RWF",
+      value: subtotal,
+      items: items.map((i) => ({ item_id: i.slug, item_name: i.name, quantity: i.quantity })),
+    });
 
     const payload = {
       customerName: customerName.trim(),
@@ -86,12 +144,15 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
         const data = (await response.json().catch(() => null)) as
           | { error?: string }
           | null;
-        setError(data?.error ?? "Something went wrong. Please try again.");
+        setError(data?.error ?? t.errorGeneric);
         setSubmitting(false);
         return;
       }
 
-      // Order recorded — hand off to WhatsApp with the full summary.
+      // Order recorded. Browsers block window.open after an await, so the
+      // WhatsApp hand-off is a link the customer taps on the next screen.
+      const data = (await response.json().catch(() => null)) as { id?: string | null } | null;
+      const reference = data?.id ? orderReference(data.id) : null;
       const message = buildOrderMessage({
         items,
         customerName: payload.customerName,
@@ -99,11 +160,18 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
         fulfillment,
         deliveryArea: payload.deliveryArea,
         note: payload.note,
+        reference,
       });
-      window.open(whatsappLink(message), "_blank", "noopener,noreferrer");
+      setPlaced({ reference, whatsapp: whatsappLink(message), items: [...items], subtotal });
+      window.scrollTo({ top: 0 });
+      trackEvent("purchase", {
+        currency: "RWF",
+        value: subtotal,
+        items: items.map((i) => ({ item_id: i.slug, item_name: i.name, quantity: i.quantity })),
+      });
       clearCart();
     } catch {
-      setError("Network error. Please check your connection and try again.");
+      setError(t.errorNetwork);
       setSubmitting(false);
     }
   }
@@ -267,10 +335,14 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                 </label>
                 <select
                   id="area"
+                  required
                   value={deliveryArea}
                   onChange={(event) => setDeliveryArea(event.target.value)}
-                  className="mt-1.5 w-full cursor-pointer rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink"
+                  className="mt-1.5 h-11 w-full cursor-pointer rounded-xl border border-line-strong bg-porcelain px-4 text-ink"
                 >
+                  <option value="" disabled>
+                    {t.chooseArea}
+                  </option>
                   {KIGALI_AREAS.map((area) => (
                     <option key={area} value={area}>
                       {area}
@@ -281,16 +353,6 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
                   {t.feeNote}
                   {freeDelivery ? t.feeNoteFree : "."}
                 </p>
-
-                <details className="group mt-3">
-                  <summary className="flex w-fit cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-copper [&::-webkit-details-marker]:hidden">
-                    {t.seeFees}
-                    <IconChevronDown className="h-4 w-4 transition-transform duration-200 group-open:rotate-180" />
-                  </summary>
-                  <div className="mt-3">
-                    <DeliveryZones />
-                  </div>
-                </details>
               </div>
             )}
 

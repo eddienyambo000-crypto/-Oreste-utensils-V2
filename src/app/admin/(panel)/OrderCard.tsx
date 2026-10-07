@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { updateOrderStatus } from "@/app/admin/actions";
+import { IconWhatsApp } from "@/components/ui/icons";
 import { formatRwf } from "@/lib/format";
+import { formatOrderTime, orderReference, whatsappDigits } from "@/lib/orders";
 import type { CartItem, OrderStatus } from "@/lib/types";
 
 const STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
@@ -53,13 +55,15 @@ export function OrderCard({ order }: { order: AdminOrder }) {
     });
   }
 
-  const created = new Date(order.createdAt);
+  const reference = orderReference(order.id);
+  const waDigits = whatsappDigits(order.phone);
 
   return (
     <article className="rounded-2xl border border-line bg-surface p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="font-display text-lg font-semibold">{order.customerName}</h3>
+          <p className="font-mono text-xs font-semibold tracking-wide text-copper">{reference}</p>
+          <h3 className="mt-0.5 font-display text-lg font-semibold">{order.customerName}</h3>
           <p className="mt-0.5 text-sm text-ink-soft">
             <a
               href={`tel:${order.phone}`}
@@ -72,14 +76,7 @@ export function OrderCard({ order }: { order: AdminOrder }) {
               ? `Delivery — ${order.deliveryArea ?? "Kigali"}`
               : "Pickup at City Plaza"}
           </p>
-          <p className="mt-0.5 text-xs text-ink-faint">
-            {created.toLocaleString("en-GB", {
-              day: "numeric",
-              month: "short",
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </p>
+          <p className="mt-0.5 text-xs text-ink-faint">{formatOrderTime(order.createdAt)}</p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-semibold ${STATUS_STYLES[status]}`}
@@ -121,13 +118,25 @@ export function OrderCard({ order }: { order: AdminOrder }) {
                 : "+ delivery fee"}
           </span>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+        {waDigits && (
+          <a
+            href={`https://wa.me/${waDigits}?text=${encodeURIComponent(`Hello ${order.customerName}, this is Oreste Utensils about your order ${reference}.`)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-line-strong px-4 text-sm font-medium text-ink transition-colors duration-200 hover:border-whatsapp hover:text-whatsapp"
+          >
+            <IconWhatsApp aria-hidden className="h-4 w-4 text-whatsapp" />
+            Reply
+          </a>
+        )}
         <label className="flex items-center gap-2 text-sm">
           <span className="sr-only">Update status for {order.customerName}</span>
           <select
             value={status}
             disabled={pending}
             onChange={(event) => changeStatus(event.target.value as OrderStatus)}
-            className="cursor-pointer rounded-full border border-line-strong bg-porcelain px-4 py-1.5 text-sm font-medium disabled:opacity-60"
+            className="min-h-11 cursor-pointer rounded-full border border-line-strong bg-porcelain px-4 text-sm font-medium disabled:opacity-60"
           >
             {STATUS_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -136,6 +145,7 @@ export function OrderCard({ order }: { order: AdminOrder }) {
             ))}
           </select>
         </label>
+        </div>
       </div>
       {error && (
         <p role="alert" className="mt-2 text-sm text-copper-deep">

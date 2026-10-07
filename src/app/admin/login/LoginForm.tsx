@@ -4,6 +4,9 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
+const FORBIDDEN =
+  "That account doesn't have admin access. Sign in with the shop's admin account.";
+
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -11,6 +14,10 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Set by the proxy when a non-admin account tried to get in.
+  const forbidden = searchParams.get("error") === "forbidden";
+  const message = error ?? (forbidden && !loading ? FORBIDDEN : null);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -24,7 +31,9 @@ export function LoginForm() {
     });
 
     if (signInError) {
-      setError("Incorrect email or password.");
+      setError(
+        signInError.status === 400 ? "Incorrect email or password." : "Couldn't sign in. Check your connection and try again.",
+      );
       setLoading(false);
       return;
     }
@@ -33,6 +42,9 @@ export function LoginForm() {
     router.replace(next.startsWith("/admin") ? next : "/admin");
     router.refresh();
   }
+
+  const fieldClass =
+    "mt-1.5 min-h-12 w-full rounded-xl border border-line-strong bg-porcelain px-4 text-base text-ink";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -44,10 +56,12 @@ export function LoginForm() {
           id="email"
           type="email"
           required
-          autoComplete="email"
+          autoComplete="username"
+          autoCapitalize="none"
+          spellCheck={false}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink"
+          className={fieldClass}
         />
       </div>
       <div>
@@ -61,20 +75,20 @@ export function LoginForm() {
           autoComplete="current-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-1.5 w-full rounded-xl border border-line-strong bg-porcelain px-4 py-2.5 text-ink"
+          className={fieldClass}
         />
       </div>
 
-      {error && (
+      {message && (
         <p role="alert" className="rounded-xl bg-copper-tint/50 px-4 py-2.5 text-sm text-copper-deep">
-          {error}
+          {message}
         </p>
       )}
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full cursor-pointer rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+        className="min-h-12 w-full cursor-pointer rounded-full bg-copper px-6 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

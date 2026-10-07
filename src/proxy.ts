@@ -1,11 +1,13 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { isAdminEmail } from "@/lib/supabase/admins";
 
 /**
  * Refreshes the Supabase auth session on every admin request and guards the
- * admin area. When Supabase isn't configured (local seed mode) it passes
- * through — the admin pages then render a "connect Supabase" notice instead
- * of crashing.
+ * admin area: only accounts on the admin list get in. Any other signed-in
+ * account (sign-ups are public) is signed out and shown why. When Supabase
+ * isn't configured (local seed mode) it passes through — the admin pages then
+ * render a "connect Supabase" notice instead of crashing.
  */
 export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -32,6 +34,17 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Redirects must carry any cookies Supabase just set (a refreshed or
+  // cleared session), or the browser keeps the stale ones.
+  function redirectTo(pathname: string, params: Record<string, string> = {}) {
+    const target = request.nextUrl.clone();
+    target.pathname = pathname;
+    target.search = new URLSearchParams(params).toString();
+    const redirect = NextResponse.redirect(target);
+    response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
+    return redirect;
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -39,19 +52,13 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLogin = pathname === "/admin/login";
 
-  if (!user && !isLogin) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/admin/login";
-    redirectUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(redirectUrl);
+  if (user && !isAdminEmail(user.email)) {
+    await supabase.auth.signOut({ scope: "local" });
+    return isLogin ? response : redirectTo("/admin/login", { error: "forbidden" });
   }
 
-  if (user && isLogin) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/admin";
-    redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
-  }
+  if (!user && !isLogin) return redirectTo("/admin/login", { next: pathname });
+  if (user && isLogin) return redirectTo("/admin");
 
   return response;
 }

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
 import { Analytics } from "@/components/Analytics";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
+import { getLocale } from "@/lib/i18n/server";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -19,7 +20,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `${BUSINESS.name} — Premium Kitchenware in Kigali, Rwanda`,
+    default: `${BUSINESS.name} — Kitchenware Shop in Kigali, Rwanda`,
     template: `%s — ${BUSINESS.name}`,
   },
   description: BUSINESS.description,
@@ -36,12 +37,12 @@ export const metadata: Metadata = {
     locale: "en_RW",
     url: SITE_URL,
     siteName: BUSINESS.name,
-    title: `${BUSINESS.name} — Premium Kitchenware in Kigali, Rwanda`,
+    title: `${BUSINESS.name} — Kitchenware Shop in Kigali, Rwanda`,
     description: BUSINESS.description,
   },
   twitter: {
     card: "summary_large_image",
-    title: `${BUSINESS.name} — Premium Kitchenware in Kigali, Rwanda`,
+    title: `${BUSINESS.name} — Kitchenware Shop in Kigali, Rwanda`,
     description: BUSINESS.description,
   },
   alternates: { canonical: "/" },
@@ -52,12 +53,22 @@ export const metadata: Metadata = {
     : undefined,
 };
 
-export default function RootLayout({
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#faf6f0" },
+    { media: "(prefers-color-scheme: dark)", color: "#15120c" },
+  ],
+};
+
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // The visitor's chosen language, so screen readers and translation tools
+  // treat Kinyarwanda and French pages as what they are.
+  const locale = await getLocale();
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${fraunces.variable} ${inter.variable} h-full`}
       suppressHydrationWarning
     >

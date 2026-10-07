@@ -1,575 +1,302 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ProductCard } from "@/components/shop/ProductCard";
-import { ProductMarquee } from "@/components/shop/ProductMarquee";
+import { ProductRail } from "@/components/shop/ProductRail";
+import { ServiceFacts } from "@/components/shop/ServiceFacts";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
-import { Parallax } from "@/components/ui/Parallax";
-import { Reveal } from "@/components/ui/Reveal";
 import {
   IconArrowRight,
   IconCheck,
   IconClock,
   IconMapPin,
-  IconShield,
-  IconStore,
+  IconPhone,
   IconTruck,
-  IconWhatsApp,
 } from "@/components/ui/icons";
-import type { MarqueeItem } from "@/components/shop/ProductMarquee";
-import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF } from "@/lib/constants";
+import { departments, homepageRail } from "@/lib/catalog";
+import { BUSINESS } from "@/lib/constants";
 import {
   getCategories,
-  getMarqueeSlides,
+  getFreeDeliveryThreshold,
   getProducts,
   getSiteImages,
   getTestimonials,
 } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
-import { whatsappLink } from "@/lib/whatsapp";
+import type { Category, Product } from "@/lib/types";
+
+/** The homepage degrades gracefully: if the catalogue can't load, the shop
+ *  page reports it; here the product sections simply step aside. */
+async function loadCatalog(): Promise<{ products: Product[]; categories: Category[] }> {
+  try {
+    const [products, categories] = await Promise.all([getProducts(), getCategories()]);
+    return { products, categories };
+  } catch (error) {
+    console.error("[home] catalogue failed to load:", error);
+    return { products: [], categories: [] };
+  }
+}
 
 export default async function HomePage() {
-  const [categories, products, testimonials, siteImages, marqueeSlides, dict] =
-    await Promise.all([
-      getCategories(),
-      getProducts(),
-      getTestimonials(),
-      getSiteImages(),
-      getMarqueeSlides(),
-      getDictionary(),
-    ]);
+  const [{ products, categories }, testimonials, siteImages, threshold, dict] = await Promise.all([
+    loadCatalog(),
+    getTestimonials(),
+    getSiteImages(),
+    getFreeDeliveryThreshold(),
+    getDictionary(),
+  ]);
+  const h = dict.hero;
   const t = dict.home;
-  const featured = products.filter((product) => product.featured);
-
-  // The scrolling strip prefers the admin's hand-picked slides; if none are
-  // set it falls back to the latest products that have a photo.
-  const usingCuratedSlides = marqueeSlides.length > 0;
-  const marqueeItems: MarqueeItem[] = usingCuratedSlides
-    ? marqueeSlides.map((slide, index) => ({
-        key: `slide-${index}`,
-        image: slide.url,
-        alt: slide.name || "Featured at Oreste Utensils",
-        title: slide.name,
-        subtitle: slide.price ? formatRwf(slide.price) : undefined,
-        href: slide.link,
-      }))
-    : products
-        .filter((product) => product.images[0])
-        .slice(0, 12)
-        .map((product) => ({
-          key: product.id,
-          image: product.images[0],
-          alt: product.name,
-          title: product.name,
-          subtitle: formatRwf(product.priceRwf),
-          href: `/product/${product.slug}`,
-        }));
+  const rail = homepageRail(products);
+  const depts = departments(categories);
 
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        {/* Blurred photo backdrop for depth */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 z-0">
-          <Image
-            src={siteImages.hero_image}
-            alt=""
-            fill
-            priority
-            sizes="100vw"
-            className="scale-110 object-cover opacity-20 blur-2xl"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-porcelain/85 via-porcelain/92 to-porcelain" />
-        </div>
+      <section aria-labelledby="hero-title" className="mx-auto max-w-7xl px-4 pb-14 pt-8 sm:px-6 lg:px-8 lg:pb-20 lg:pt-14">
+        <div className="grid items-center gap-10 lg:grid-cols-[1.08fr_1fr] lg:gap-16">
+          <div className="animate-fade-up">
+            <p className="text-sm font-medium text-ink-soft">
+              <span aria-hidden className="mr-2 inline-block h-2 w-2 rounded-full bg-copper align-middle" />
+              {h.label}
+            </p>
+            <h1
+              id="hero-title"
+              className="mt-5 font-display text-[clamp(2.6rem,7.5vw,4.6rem)] font-semibold leading-[1.02] tracking-[-0.035em] text-balance"
+            >
+              {h.titleLead} <em className="font-medium italic text-copper">{h.titleEm}</em>
+            </h1>
+            <p className="mt-6 max-w-[34rem] text-lg leading-relaxed text-ink-soft">{h.subtitle}</p>
 
-        {/*
-          Responsive hero. Mobile is a single flex column in this exact order:
-          copy → sliders → "Shop the collection" → store photo → trust row.
-          On desktop the left blocks (copy / CTA / trust) regroup into one column
-          via `lg:contents`→`lg:flex`, the sliders become a full-width strip on
-          top, and the store photo sits to the right.
-        */}
-        <div className="relative z-10 mx-auto flex max-w-7xl flex-col gap-7 px-4 pb-16 pt-6 sm:px-6 lg:grid lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-x-16 lg:gap-y-8 lg:px-8 lg:pb-24 lg:pt-8">
-          {/* LEFT COLUMN GROUP — copy, CTA, trust. `contents` on mobile lets its
-              children interleave with the sliders/photo; a real column on lg. */}
-          <div className="contents lg:col-start-1 lg:row-start-2 lg:flex lg:flex-col lg:gap-7">
-            {/* Copy */}
-            <div className="order-1">
-              <p className="animate-fade-in text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                {dict.hero.eyebrow}
-              </p>
-              <h1 className="mt-4 font-display text-4xl font-bold leading-[1.06] tracking-[-0.02em] text-ink sm:text-5xl lg:text-[3.5rem]">
-                {dict.hero.titleLead.split(" ").map((word, i) => (
-                  <span
-                    key={`${word}-${i}`}
-                    className="mr-[0.25em] inline-block animate-fade-up"
-                    style={{ animationDelay: `${i * 90}ms` }}
-                  >
-                    {word}
-                  </span>
-                ))}
-                <span
-                  className="inline-block animate-fade-up"
-                  style={{
-                    animationDelay: `${dict.hero.titleLead.split(" ").length * 90}ms`,
-                  }}
-                >
-                  <em className="font-display italic text-copper">
-                    {dict.hero.titleEm}
-                  </em>
-                </span>
-              </h1>
-              <p
-                className="mt-6 max-w-md animate-fade-up text-lg leading-relaxed text-ink-soft"
-                style={{ animationDelay: "120ms" }}
-              >
-                {dict.hero.subtitle}
-              </p>
-            </div>
-
-            {/* Primary CTA — sits between the sliders and the store photo on mobile */}
-            <div className="order-3 animate-fade-up" style={{ animationDelay: "220ms" }}>
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
               <Link
                 href="/shop"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-7 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
               >
-                {dict.hero.cta}
+                {h.cta}
                 <IconArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/contact"
+                className="inline-flex min-h-12 items-center font-semibold text-ink underline decoration-line-strong decoration-2 underline-offset-[6px] transition-colors duration-200 hover:decoration-copper"
+              >
+                {h.secondary}
               </Link>
             </div>
 
-            {/* Trust row */}
-            <dl
-              className="order-5 flex flex-wrap gap-x-8 gap-y-3 text-sm text-ink-soft animate-fade-up"
-              style={{ animationDelay: "320ms" }}
-            >
-              <div className="flex items-center gap-2">
-                <IconTruck className="h-4 w-4 text-copper" />
-                <dt className="sr-only">Delivery</dt>
-                <dd>
-                  {dict.hero.trustDelivery}{" "}
-                  <span className="font-semibold text-ink">
-                    {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}
-                  </span>
-                </dd>
-              </div>
-              <div className="flex items-center gap-2">
-                <IconShield className="h-4 w-4 text-copper" />
-                <dt className="sr-only">Payment</dt>
-                <dd>{dict.hero.trustPayment}</dd>
-              </div>
-              <div className="flex items-center gap-2">
-                <IconStore className="h-4 w-4 text-copper" />
-                <dt className="sr-only">Store</dt>
-                <dd>{dict.hero.trustOpen}</dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* Sliders — the circled spot on mobile, full-width strip on top for lg.
-              Only rendered when there's something to show, so an empty strip
-              never leaves a gap before products/slides are added. */}
-          {marqueeItems.length >= (usingCuratedSlides ? 1 : 3) && (
-            <div className="order-2 lg:col-span-2 lg:col-start-1 lg:row-start-1">
-              <ProductMarquee
-                items={marqueeItems}
-                minItems={usingCuratedSlides ? 1 : 3}
-              />
-            </div>
-          )}
-
-          {/* Store photo + "Visit the store" card */}
-          <div
-            className="relative order-4 mb-5 animate-fade-in lg:col-start-2 lg:row-start-2 lg:mb-0"
-            style={{ animationDelay: "150ms" }}
-          >
-            <div className="relative aspect-[5/6] overflow-hidden rounded-3xl shadow-card-hover sm:aspect-[4/3] lg:aspect-[5/6]">
-              <Parallax strength={28} className="absolute inset-[-6%]">
-                <Image
-                  src={siteImages.hero_image}
-                  alt="A bright kitchen counter with stainless cookware at Oreste Utensils"
-                  fill
-                  priority
-                  sizes="(max-width: 1024px) 100vw, 45vw"
-                  className="scale-110 object-cover"
-                />
-              </Parallax>
-            </div>
-            <div className="absolute -bottom-5 left-6 rounded-2xl border border-line bg-surface/95 px-5 py-4 shadow-card-hover backdrop-blur-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-ink-faint">
-                {dict.hero.visitCard}
-              </p>
-              <p className="mt-1 flex items-center gap-1.5 text-sm font-medium text-ink">
-                <IconMapPin className="h-4 w-4 text-copper" />
-                {BUSINESS.address.street}, {BUSINESS.address.city}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Categories ───────────────────────────────────────── */}
-      <section aria-labelledby="categories-heading" className="bg-surface py-16 lg:py-24">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                  {t.categoriesEyebrow}
-                </p>
-                <h2
-                  id="categories-heading"
-                  className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
-                >
-                  {t.categoriesTitle}
-                </h2>
-              </div>
-              <Link
-                href="/shop"
-                className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
-              >
-                {dict.common.viewAllProducts}
-                <IconArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </Reveal>
-
-          <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-5 lg:grid-cols-3">
-            {categories.slice(0, 6).map((category, index) => (
-              <Reveal key={category.id} delay={index * 60}>
-                <Link
-                  href={`/shop/${category.slug}`}
-                  className="group relative block overflow-hidden rounded-2xl"
-                >
-                  <div className="relative aspect-[4/3]">
-                    {category.image ? (
-                      <Image
-                        src={category.image}
-                        alt={category.name}
-                        fill
-                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 33vw"
-                        className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
-                      />
-                    ) : (
-                      // Branded fallback when a category has no photo yet.
-                      <div className="absolute inset-0 bg-gradient-to-br from-ink via-ink to-copper-deep transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-ink/15 to-transparent" />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                    <h3 className="font-display text-lg font-semibold text-white sm:text-xl">
-                      {category.name}
-                    </h3>
-                    {category.description && (
-                      <p className="mt-0.5 hidden text-sm text-white/75 sm:block">
-                        {category.description}
-                      </p>
-                    )}
-                  </div>
-                </Link>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Featured products (only when there are featured items) ── */}
-      {featured.length > 0 && (
-        <section aria-labelledby="featured-heading" className="py-16 lg:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Reveal>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                    {t.featuredEyebrow}
-                  </p>
-                  <h2
-                    id="featured-heading"
-                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
-                  >
-                    {t.featuredTitle}
-                  </h2>
-                </div>
-              </div>
-            </Reveal>
-
-            <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
-              {featured.slice(0, 8).map((product, index) => (
-                <Reveal key={product.id} delay={index * 60}>
-                  <ProductCard product={product} />
-                </Reveal>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── Guarantees ───────────────────────────────────────── */}
-      <section aria-labelledby="promise-heading" className="border-y border-line bg-surface py-14 lg:py-16">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h2 id="promise-heading" className="sr-only">
-            {t.guaranteesTitle}
-          </h2>
-          <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
-            {[
-              {
-                icon: IconShield,
-                title: t.guarantees.inspectT,
-                body: t.guarantees.inspectB,
-              },
-              {
-                icon: IconTruck,
-                title: t.guarantees.deliveryT,
-                body: t.guarantees.deliveryB,
-              },
-              {
-                icon: IconStore,
-                title: t.guarantees.storeT,
-                body: t.guarantees.storeB,
-              },
-              {
-                icon: IconCheck,
-                title: t.guarantees.exchangeT,
-                body: t.guarantees.exchangeB,
-              },
-            ].map((item) => (
-              <div key={item.title}>
-                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-copper-tint text-copper">
-                  <item.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 font-display text-base font-semibold">{item.title}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-ink-soft">{item.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── B2B strip ────────────────────────────────────────── */}
-      <section aria-labelledby="b2b-heading" className="py-16 lg:py-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Reveal>
-            <div className="relative overflow-hidden rounded-3xl bg-ink px-6 py-12 sm:px-12 lg:py-16">
-              <div className="relative grid items-center gap-8 lg:grid-cols-[1.5fr_1fr]">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-tint">
-                    {t.b2bEyebrow}
-                  </p>
-                  <h2
-                    id="b2b-heading"
-                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] text-porcelain sm:text-4xl"
-                  >
-                    {t.b2bTitle}
-                  </h2>
-                  <p className="mt-4 max-w-xl leading-relaxed text-porcelain/70">
-                    {t.b2bBody}
-                  </p>
-                </div>
-                <div className="flex flex-col gap-3 sm:flex-row lg:flex-col lg:items-end">
-                  <Link
-                    href="/business"
-                    className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-7 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
-                  >
-                    {t.b2bCta}
-                    <IconArrowRight className="h-4 w-4" />
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── Story strip ──────────────────────────────────────── */}
-      <section aria-labelledby="story-heading" className="bg-ink py-16 text-porcelain lg:py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-          <Reveal>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="relative aspect-[3/4] overflow-hidden rounded-2xl">
-                <Image
-                  src={siteImages.story_image_1}
-                  alt="A couple cooking together with quality cookware"
-                  fill
-                  sizes="(max-width: 1024px) 50vw, 25vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="relative mt-8 aspect-[3/4] overflow-hidden rounded-2xl">
-                <Image
-                  src={siteImages.story_image_2}
-                  alt="Spices being added to a stainless steel pan"
-                  fill
-                  sizes="(max-width: 1024px) 50vw, 25vw"
-                  className="object-cover"
-                />
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper-tint">
-              {t.storyEyebrow}
-            </p>
-            <h2
-              id="story-heading"
-              className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] text-porcelain sm:text-4xl"
-            >
-              {t.storyTitle}
-            </h2>
-            <p className="mt-5 max-w-lg leading-relaxed text-porcelain/70">
-              {t.storyBody}
-            </p>
-            <ul className="mt-8 space-y-4">
-              {t.storyPoints.map((point) => (
-                <li key={point} className="flex items-start gap-3 text-porcelain/85">
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-copper" aria-hidden />
-                  {point}
+            <ul role="list" className="mt-10 space-y-2.5 border-t border-line pt-5 text-sm text-ink-soft">
+              {[
+                { Icon: IconTruck, text: h.factDelivery.replace("{amount}", formatRwf(threshold)) },
+                { Icon: IconCheck, text: h.factPayment },
+                { Icon: IconClock, text: h.factHours },
+              ].map(({ Icon, text }) => (
+                <li key={text} className="flex items-center gap-2.5">
+                  <Icon aria-hidden className="h-4 w-4 shrink-0 text-copper" />
+                  {text}
                 </li>
               ))}
             </ul>
-            <Link
-              href="/about"
-              className="mt-9 inline-flex cursor-pointer items-center gap-2 rounded-full border border-porcelain/25 px-6 py-3 text-sm font-medium text-porcelain transition-colors duration-200 hover:border-copper hover:text-copper-tint active:scale-[0.98]"
-            >
-              {t.storyCta}
-              <IconArrowRight className="h-4 w-4" />
-            </Link>
-          </Reveal>
-        </div>
-      </section>
+          </div>
 
-      {/* ── Visit the store ──────────────────────────────────── */}
-      <section aria-labelledby="visit-heading" className="py-16 lg:py-24">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-          <Reveal>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-              {t.visitEyebrow}
-            </p>
-            <h2
-              id="visit-heading"
-              className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
-            >
-              {t.visitTitle}
-            </h2>
-            <p className="mt-5 max-w-md leading-relaxed text-ink-soft">
-              {t.visitBody}
-            </p>
-            <div className="mt-8 space-y-4 text-sm">
-              <p className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-copper-tint text-copper">
-                  <IconMapPin className="h-4.5 w-4.5" />
-                </span>
-                <a
-                  href={BUSINESS.mapsUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-ink transition-colors duration-200 hover:text-copper"
-                >
-                  {BUSINESS.address.street}, {BUSINESS.address.city}, {BUSINESS.address.country}
-                </a>
-              </p>
-              <p className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-copper-tint text-copper">
-                  <IconClock className="h-4.5 w-4.5" />
-                </span>
-                <span className="font-medium text-ink">{BUSINESS.hoursDisplay}</span>
-              </p>
-              <p className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-copper-tint text-copper">
-                  <IconWhatsApp className="h-4.5 w-4.5" />
-                </span>
-                <a
-                  href={whatsappLink("Hello Oreste Utensils! I'm planning to visit your City Plaza store.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-ink transition-colors duration-200 hover:text-copper"
-                >
-                  {BUSINESS.phoneDisplay}
-                </a>
-              </p>
-            </div>
-          </Reveal>
-          <Reveal delay={100}>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl shadow-card-hover">
+          <figure className="animate-fade-in" style={{ animationDelay: "120ms" }}>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-cream sm:aspect-[5/4] lg:aspect-[4/5]">
               <Image
-                src={siteImages.visit_image}
-                alt="A bright kitchen styled with cookware from Oreste Utensils"
+                src={siteImages.hero_image}
+                alt={h.photoAlt}
                 fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
+                priority
+                sizes="(max-width: 1024px) 100vw, 46vw"
                 className="object-cover"
               />
             </div>
-          </Reveal>
+            <figcaption className="mt-3 flex items-center gap-1.5 text-sm text-ink-faint">
+              <IconMapPin aria-hidden className="h-4 w-4 text-copper" />
+              {h.photoCaption}
+            </figcaption>
+          </figure>
         </div>
       </section>
 
-      {/* ── Testimonials ─────────────────────────────────────── */}
-      {testimonials.length > 0 && (
-        <section aria-labelledby="reviews-heading" className="bg-surface py-16 lg:py-24">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Reveal>
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-copper">
-                    {t.reviewsEyebrow}
-                  </p>
-                  <h2
-                    id="reviews-heading"
-                    className="mt-3 font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl"
-                  >
-                    {t.reviewsTitle}
-                  </h2>
-                </div>
-                <Link
-                  href="/testimonials"
-                  className="inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium text-copper transition-colors duration-200 hover:text-copper-deep"
-                >
-                  {t.reviewsMore}
-                  <IconArrowRight className="h-4 w-4" />
-                </Link>
-              </div>
-            </Reveal>
-            <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {testimonials.slice(0, 3).map((t, index) => (
-                <Reveal key={t.id} delay={index * 70}>
-                  <TestimonialCard testimonial={t} />
-                </Reveal>
-              ))}
-            </div>
+      {/* ── Real products, chosen in the admin ───────────────── */}
+      <div className="border-t border-line bg-surface">
+        <ProductRail
+          id="new-in-store"
+          title={t.railTitle}
+          actionLabel={t.railAction}
+          actionHref="/shop"
+          products={rail}
+        />
+      </div>
+
+      {/* ── Departments ──────────────────────────────────────── */}
+      {depts.length > 0 && (
+        <section aria-labelledby="departments" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="departments" className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">
+              {t.deptTitle}
+            </h2>
+            <Link
+              href="/shop"
+              className="inline-flex shrink-0 items-center gap-1.5 py-2 text-sm font-semibold text-copper transition-colors duration-200 hover:text-copper-deep"
+            >
+              {t.deptAction}
+              <IconArrowRight className="h-4 w-4" />
+            </Link>
           </div>
+          <ul role="list" className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6 lg:grid-cols-3">
+            {depts.map((dept, index) => (
+              <li key={dept.id}>
+                <Link href={`/shop/${dept.slug}`} className="group block">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-cream">
+                    <Image
+                      src={dept.image}
+                      alt=""
+                      fill
+                      priority={index < 2 && rail.length === 0}
+                      sizes="(max-width: 1024px) 50vw, 33vw"
+                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
+                    />
+                  </div>
+                  <h3 className="mt-3 flex items-center gap-1.5 font-display text-lg font-semibold transition-colors duration-200 group-hover:text-copper">
+                    {dept.name}
+                    <IconArrowRight
+                      aria-hidden
+                      className="h-4 w-4 -translate-x-1 opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100"
+                    />
+                  </h3>
+                  {dept.description && (
+                    <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-soft">{dept.description}</p>
+                  )}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </section>
       )}
 
-      {/* ── Closing CTA ──────────────────────────────────────── */}
-      <section className="pb-20">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-3xl bg-copper px-6 py-14 text-center text-white sm:px-12">
-            <h2 className="font-display text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
-              {t.closingTitle}
-            </h2>
-            <p className="mx-auto mt-4 max-w-md text-white/80">
-              {t.closingBody} {formatRwf(FREE_DELIVERY_THRESHOLD_RWF)}.
-            </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-4">
-              <Link
-                href="/shop"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-ink px-7 py-3.5 font-medium text-porcelain transition-[background-color,transform] duration-200 hover:bg-ink/85 active:scale-[0.98]"
-              >
-                {dict.hero.cta}
-                <IconArrowRight className="h-4 w-4" />
-              </Link>
-              <a
-                href={whatsappLink("Hello Oreste Utensils! I'd like to place an order.")}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/40 px-7 py-3.5 font-medium text-white transition-colors duration-200 hover:bg-white/10 active:scale-[0.98]"
-              >
-                <IconWhatsApp className="h-4 w-4" />
-                {dict.common.orderOnWhatsapp}
-              </a>
+      {/* ── The shop + how ordering works ────────────────────── */}
+      <section aria-labelledby="visit" className="border-y border-line bg-surface">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1fr_1.1fr] lg:gap-16 lg:px-8 lg:py-20">
+          <figure>
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-cream sm:aspect-[5/4] lg:aspect-[4/5]">
+              <Image
+                src={siteImages.story_image_1}
+                alt={t.visitPhotoAlt}
+                fill
+                sizes="(max-width: 1024px) 100vw, 44vw"
+                className="object-cover"
+              />
             </div>
+          </figure>
+
+          <div className="flex flex-col justify-center">
+            <h2 id="visit" className="font-display text-3xl font-semibold leading-tight tracking-[-0.02em] text-balance sm:text-4xl">
+              {t.visitTitle}
+            </h2>
+            <p className="mt-4 max-w-prose leading-relaxed text-ink-soft">{t.visitBody}</p>
+
+            <h3 className="mt-9 text-sm font-semibold text-ink">{t.howTitle}</h3>
+            <ol className="mt-4 space-y-4">
+              {t.how.map((step, index) => (
+                <li key={step.t} className="flex gap-4">
+                  <span
+                    aria-hidden
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-line-strong font-display text-sm font-semibold tabular-nums text-copper"
+                  >
+                    {index + 1}
+                  </span>
+                  <div>
+                    <p className="font-semibold text-ink">{step.t}</p>
+                    <p className="mt-0.5 text-sm leading-relaxed text-ink-soft">{step.b}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+
+            <ServiceFacts dict={dict} threshold={threshold} className="mt-9" />
+
+            <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
+              <div className="flex items-start gap-2">
+                <IconMapPin aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                <div>
+                  <dt className="sr-only">{dict.contact.address}</dt>
+                  <dd>
+                    <a
+                      href={BUSINESS.mapsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-copper"
+                    >
+                      {BUSINESS.address.street}, {BUSINESS.address.city}
+                    </a>
+                  </dd>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <IconClock aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                <div>
+                  <dt className="sr-only">{dict.contact.hours}</dt>
+                  <dd className="font-medium text-ink">{h.factHours}</dd>
+                </div>
+              </div>
+              <div className="flex items-start gap-2">
+                <IconPhone aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                <div>
+                  <dt className="sr-only">{dict.contact.phone}</dt>
+                  <dd>
+                    <a href={`tel:${BUSINESS.phoneE164}`} className="font-medium text-ink hover:text-copper">
+                      {BUSINESS.phoneDisplay}
+                    </a>
+                  </dd>
+                </div>
+              </div>
+            </dl>
           </div>
         </div>
       </section>
+
+      {/* ── Trade ────────────────────────────────────────────── */}
+      <section aria-labelledby="trade" className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-5 rounded-[1.75rem] border border-line-strong px-6 py-8 sm:flex-row sm:items-center sm:justify-between sm:px-10">
+          <div>
+            <h2 id="trade" className="font-display text-xl font-semibold tracking-[-0.01em] sm:text-2xl">
+              {t.tradeTitle}
+            </h2>
+            <p className="mt-1.5 text-ink-soft">{t.tradeBody}</p>
+          </div>
+          <Link
+            href="/business"
+            className="inline-flex min-h-12 shrink-0 items-center gap-2 self-start rounded-full bg-ink px-6 font-semibold text-porcelain transition-colors duration-200 hover:bg-ink/85 sm:self-auto"
+          >
+            {t.tradeCta}
+            <IconArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+      </section>
+
+      {/* ── Reviews (only real ones, added in the admin) ─────── */}
+      {testimonials.length > 0 && (
+        <section aria-labelledby="reviews" className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between gap-4">
+            <h2 id="reviews" className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">
+              {t.reviewsTitle}
+            </h2>
+            <Link
+              href="/testimonials"
+              className="inline-flex shrink-0 items-center gap-1.5 py-2 text-sm font-semibold text-copper transition-colors duration-200 hover:text-copper-deep"
+            >
+              {t.reviewsMore}
+              <IconArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <ul role="list" className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {testimonials.slice(0, 3).map((testimonial) => (
+              <li key={testimonial.id}>
+                <TestimonialCard testimonial={testimonial} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }

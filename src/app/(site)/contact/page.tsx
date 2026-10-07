@@ -95,7 +95,7 @@ export default async function ContactPage() {
               href={whatsappLink("Hello Oreste Utensils! I'd like to place an order / ask a question.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-[#25D366] px-6 py-3.5 font-medium text-white transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-6 py-3.5 font-medium text-porcelain transition-colors duration-200 hover:bg-ink/85"
             >
               <IconWhatsApp className="h-5 w-5" />
               {dict.common.messageWhatsapp}
