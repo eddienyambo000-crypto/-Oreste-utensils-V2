@@ -41,12 +41,12 @@ export function ProductRail({ id, title, actionLabel, actionHref, products }: Pr
         role="list"
         className="scroll-rail mt-6 flex scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 sm:scroll-px-6 sm:px-6 md:mx-auto md:grid md:max-w-7xl md:grid-cols-3 md:gap-6 md:overflow-visible md:pb-0 lg:grid-cols-4 lg:px-8"
       >
-        {products.map((product, index) => (
+        {products.map((product) => (
           <li key={product.id} className="w-[44vw] max-w-[13rem] shrink-0 snap-start md:w-auto md:max-w-none">
+            {/* Lazy: the rail sits below the hero, whose photo is the LCP. */}
             <ProductCard
               product={product}
-              priority={index < 2}
-              sizes="(max-width: 768px) 44vw, (max-width: 1024px) 33vw, 25vw"
+              sizes="(max-width: 768px) 44vw, (max-width: 1024px) 33vw, 300px"
             />
           </li>
         ))}

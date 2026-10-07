@@ -143,16 +143,16 @@ export default async function HomePage() {
             </Link>
           </div>
           <ul role="list" className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6 lg:grid-cols-3">
-            {depts.map((dept, index) => (
+            {depts.map((dept) => (
               <li key={dept.id}>
                 <Link href={`/shop/${dept.slug}`} className="group block">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-cream">
+                    {/* Below the fold: lazy, so it never competes with the hero photo. */}
                     <Image
                       src={dept.image}
                       alt=""
                       fill
-                      priority={index < 2 && rail.length === 0}
-                      sizes="(max-width: 1024px) 50vw, 33vw"
+                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 45vw, 400px"
                       className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
                     />
                   </div>
