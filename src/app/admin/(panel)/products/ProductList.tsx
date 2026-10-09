@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ProductRow, type ProductRowData } from "./ProductRow";
 import { IconClose, IconSearch } from "@/components/ui/icons";
+import { normaliseSearch } from "@/lib/catalog";
 
 type Filter = "all" | "sold-out" | "homepage" | "no-photo";
 
@@ -13,21 +14,17 @@ const FILTERS: { key: Filter; label: string; test: (p: ProductRowData) => boolea
   { key: "no-photo", label: "No photo", test: (p) => !p.image },
 ];
 
-function normalise(value: string) {
-  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-}
-
 export function ProductList({ initial }: { initial: ProductRowData[] }) {
   const [products, setProducts] = useState(initial);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
 
   const visible = useMemo(() => {
-    const words = normalise(query).split(/\s+/).filter(Boolean);
+    const words = normaliseSearch(query).split(" ").filter(Boolean);
     const test = FILTERS.find((f) => f.key === filter)?.test ?? (() => true);
     return products.filter((p) => {
       if (!test(p)) return false;
-      const haystack = normalise(`${p.name} ${p.categoryName}`);
+      const haystack = normaliseSearch(p.name);
       return words.every((word) => haystack.includes(word));
     });
   }, [products, query, filter]);
@@ -51,7 +48,7 @@ export function ProductList({ initial }: { initial: ProductRowData[] }) {
           autoComplete="off"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Search by name or category"
+          placeholder="Search products"
           className="min-h-12 w-full rounded-full border border-line-strong bg-surface pl-12 pr-12 text-base text-ink placeholder:text-ink-faint [&::-webkit-search-cancel-button]:hidden"
         />
         {query && (

@@ -222,7 +222,7 @@ export function TestimonialEditor({ testimonial }: { testimonial?: Testimonial }
       <button
         type="submit"
         disabled={saving || uploading}
-        className="cursor-pointer rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+        className="cursor-pointer rounded-full bg-copper px-6 py-3 font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
       >
         {saving ? "Saving…" : isEdit ? "Save changes" : "Add testimonial"}
       </button>

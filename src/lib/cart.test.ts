@@ -15,7 +15,6 @@ function product(over: Partial<Product> = {}): Product {
     id: "p1",
     name: "Ember Dutch Oven",
     slug: "ember-dutch-oven",
-    categorySlug: "cookware",
     priceRwf: 145_000,
     shortDescription: "",
     description: "",

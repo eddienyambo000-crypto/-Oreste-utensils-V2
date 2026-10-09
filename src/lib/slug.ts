@@ -1,5 +1,5 @@
 /**
- * URL slug from a product or category name: "Poêle 28 cm" → "poele-28-cm".
+ * URL slug from a product name: "Poêle 28 cm" → "poele-28-cm".
  * Accents are folded rather than dropped so French names keep their letters.
  */
 export function slugify(value: string, maxLength = 80): string {

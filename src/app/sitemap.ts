@@ -1,7 +1,6 @@
 import type { MetadataRoute } from "next";
 import { SITE_URL } from "@/lib/constants";
-import { categoriesWithProducts } from "@/lib/catalog";
-import { getCategories, getProducts } from "@/lib/data";
+import { getProducts } from "@/lib/data";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -19,18 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
-    const [categories, products] = await Promise.all([getCategories(), getProducts()]);
-
-    // Only categories with products: empty ones are noindexed, so listing
-    // them here would send crawlers to pages that ask not to be indexed.
-    const categoryRoutes: MetadataRoute.Sitemap = categoriesWithProducts(categories, products).map(
-      ({ category }) => ({
-        url: `${SITE_URL}/shop/${category.slug}`,
-        lastModified: now,
-        changeFrequency: "weekly",
-        priority: 0.8,
-      }),
-    );
+    const products = await getProducts();
 
     const productRoutes: MetadataRoute.Sitemap = products.map((product) => ({
       url: `${SITE_URL}/product/${product.slug}`,
@@ -39,7 +27,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
-    return [...staticRoutes, ...categoryRoutes, ...productRoutes];
+    return [...staticRoutes, ...productRoutes];
   } catch {
     // Catalogue unavailable: still serve the pages that don't depend on it.
     return staticRoutes;

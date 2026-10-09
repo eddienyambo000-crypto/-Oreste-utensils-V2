@@ -88,7 +88,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={loading}
-        className="min-h-12 w-full cursor-pointer rounded-full bg-copper px-6 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+        className="min-h-12 w-full cursor-pointer rounded-full bg-copper px-6 font-semibold text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
       >
         {loading ? "Signing in…" : "Sign in"}
       </button>

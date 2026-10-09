@@ -1,13 +1,14 @@
 import { unstable_cache } from "next/cache";
+import { cache } from "react";
 import { z } from "zod";
 import {
   FREE_DELIVERY_THRESHOLD_RWF,
   SITE_IMAGE_KEYS,
   type SiteImageKey,
 } from "./constants";
-import { seedCategories, seedProducts } from "./seed";
+import { seedProducts } from "./seed";
 import { getPublicClient, isSupabaseConfigured } from "./supabase/public";
-import type { Category, Product } from "./types";
+import type { Product } from "./types";
 
 /**
  * Parse, don't trust: validate Supabase rows at the boundary with Zod and drop
@@ -32,8 +33,8 @@ function validRows<S extends z.ZodType>(schema: S, data: unknown): z.infer<S>[] 
  * Cache tag for the shared catalog. The site reads the locale cookie for i18n,
  * which makes routes dynamically rendered — so the catalog queries are cached
  * across requests here (revalidated on a timer OR immediately when the admin
- * edits products/categories/testimonials via revalidateTag(CATALOG_TAG)).
- * Admin-editable *settings* (logo, site photos, slider, threshold) are left
+ * edits products/testimonials via updateTag(CATALOG_TAG)).
+ * Admin-editable *settings* (logo, site photos, threshold) are left
  * uncached so their edits go live instantly.
  */
 export const CATALOG_TAG = "catalog";
@@ -62,7 +63,6 @@ const productRowSchema = z.object({
   id: z.string(),
   name: z.string(),
   slug: z.string(),
-  category_slug: z.string(),
   price_rwf: z.coerce.number(),
   short_description: z.string().nullish().transform((v) => v ?? ""),
   description: z.string().nullish().transform((v) => v ?? ""),
@@ -74,23 +74,11 @@ const productRowSchema = z.object({
 });
 type ProductRow = z.infer<typeof productRowSchema>;
 
-const categoryRowSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  slug: z.string(),
-  description: z.string().nullish().transform((v) => v ?? ""),
-  intro: z.string().nullish().transform((v) => v ?? ""),
-  image: z.string().nullish().transform((v) => v ?? ""),
-  sort_order: z.coerce.number().nullish().transform((v) => v ?? 0),
-});
-type CategoryRow = z.infer<typeof categoryRowSchema>;
-
 function mapProduct(row: ProductRow): Product {
   return {
     id: row.id,
     name: row.name,
     slug: row.slug,
-    categorySlug: row.category_slug,
     priceRwf: row.price_rwf,
     shortDescription: row.short_description,
     description: row.description,
@@ -102,79 +90,26 @@ function mapProduct(row: ProductRow): Product {
   };
 }
 
-function mapCategory(row: CategoryRow): Category {
-  return {
-    id: row.id,
-    name: row.name,
-    slug: row.slug,
-    description: row.description,
-    intro: row.intro,
-    image: row.image,
-    sortOrder: row.sort_order,
-  };
-}
-
-export const getCategories = unstable_cache(
-  async (): Promise<Category[]> => {
-    if (servesSeedCatalog()) {
-      return [...seedCategories].sort((a, b) => a.sortOrder - b.sortOrder);
-    }
-    const { data, error } = await getPublicClient()
-      .from("ou_categories")
-      .select("*")
-      .order("sort_order");
-    if (error) throw new Error(`Failed to load categories: ${error.message}`);
-    return validRows(categoryRowSchema, data).map(mapCategory);
-  },
-  ["categories"],
-  { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
-);
-
-export async function getCategoryBySlug(
-  slug: string,
-): Promise<Category | null> {
-  const categories = await getCategories();
-  return categories.find((c) => c.slug === slug) ?? null;
-}
-
+/** Every product, newest first. Filtering and sorting happen in lib/catalog. */
 export const getProducts = unstable_cache(
-  async (filter?: {
-    categorySlug?: string;
-    featuredOnly?: boolean;
-  }): Promise<Product[]> => {
-    let products: Product[];
-
-    if (servesSeedCatalog()) {
-      products = [...seedProducts];
-    } else {
-      let query = getPublicClient()
-        .from("ou_products")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (filter?.categorySlug) {
-        query = query.eq("category_slug", filter.categorySlug);
-      }
-      if (filter?.featuredOnly) {
-        query = query.eq("featured", true);
-      }
-      const { data, error } = await query;
-      if (error) throw new Error(`Failed to load products: ${error.message}`);
-      return validRows(productRowSchema, data).map(mapProduct);
-    }
-
-    if (filter?.categorySlug) {
-      products = products.filter((p) => p.categorySlug === filter.categorySlug);
-    }
-    if (filter?.featuredOnly) {
-      products = products.filter((p) => p.featured);
-    }
-    return products;
+  async (): Promise<Product[]> => {
+    if (servesSeedCatalog()) return [...seedProducts];
+    const { data, error } = await getPublicClient()
+      .from("ou_products")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(`Failed to load products: ${error.message}`);
+    return validRows(productRowSchema, data).map(mapProduct);
   },
   ["products"],
   { tags: [CATALOG_TAG], revalidate: CATALOG_REVALIDATE },
 );
 
-export async function getProductBySlug(slug: string): Promise<Product | null> {
+/**
+ * One product, read fresh (stock and price must be current on its own page).
+ * Wrapped in React cache() so generateMetadata and the page share one query.
+ */
+export const getProductBySlug = cache(async (slug: string): Promise<Product | null> => {
   if (servesSeedCatalog()) {
     return seedProducts.find((p) => p.slug === slug) ?? null;
   }
@@ -186,23 +121,7 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (error) throw new Error(`Failed to load product: ${error.message}`);
   const parsed = productRowSchema.safeParse(data);
   return parsed.success ? mapProduct(parsed.data) : null;
-}
-
-export async function getRelatedProducts(
-  product: Product,
-  limit = 4,
-): Promise<Product[]> {
-  const inCategory = await getProducts({ categorySlug: product.categorySlug });
-  const related = inCategory.filter((p) => p.id !== product.id);
-  if (related.length >= limit) return related.slice(0, limit);
-
-  // Pad with featured products from other categories.
-  const featured = await getProducts({ featuredOnly: true });
-  const pad = featured.filter(
-    (p) => p.id !== product.id && !related.some((r) => r.id === p.id),
-  );
-  return [...related, ...pad].slice(0, limit);
-}
+});
 
 /** Free-delivery threshold in RWF — admin-editable when Supabase is live. */
 export async function getFreeDeliveryThreshold(): Promise<number> {

@@ -65,7 +65,7 @@ export default async function SiteLayout({
   ]);
 
   return (
-    <LanguageProvider locale={locale}>
+    <LanguageProvider locale={locale} dict={dict}>
       <CartProvider>
         <StoreJsonLd />
         <a

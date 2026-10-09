@@ -104,7 +104,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
         <p className="mt-2 text-ink-soft">{t.emptyBody}</p>
         <Link
           href="/shop"
-          className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-6 py-3 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+          className="mt-6 inline-flex cursor-pointer items-center gap-2 rounded-full bg-copper px-6 py-3 font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
         >
           {dict.common.browseShop}
           <IconArrowRight className="h-4 w-4" />
@@ -142,32 +142,50 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
 
       if (!response.ok) {
         const data = (await response.json().catch(() => null)) as
-          | { error?: string }
+          | { error?: string; code?: string; unavailable?: string[] }
           | null;
-        setError(data?.error ?? t.errorGeneric);
+        setError(
+          data?.code === "unavailable" && data.unavailable
+            ? t.errorUnavailable.replace("{items}", data.unavailable.join(", "))
+            : (data?.error ?? t.errorGeneric),
+        );
         setSubmitting(false);
         return;
       }
 
-      // Order recorded. Browsers block window.open after an await, so the
-      // WhatsApp hand-off is a link the customer taps on the next screen.
-      const data = (await response.json().catch(() => null)) as { id?: string | null } | null;
+      // Order recorded. The server re-priced it, so its items and totals are
+      // the ones the customer confirms. Browsers block window.open after an
+      // await, so the WhatsApp hand-off is a link tapped on the next screen.
+      const data = (await response.json().catch(() => null)) as {
+        id?: string | null;
+        items?: typeof items;
+        subtotal?: number;
+        threshold?: number;
+      } | null;
+      const confirmedItems = data?.items ?? items;
+      const confirmedSubtotal = data?.subtotal ?? subtotal;
       const reference = data?.id ? orderReference(data.id) : null;
       const message = buildOrderMessage({
-        items,
+        items: confirmedItems,
         customerName: payload.customerName,
         phone: payload.phone,
         fulfillment,
         deliveryArea: payload.deliveryArea,
         note: payload.note,
         reference,
+        freeDeliveryThreshold: data?.threshold ?? freeDeliveryThreshold,
       });
-      setPlaced({ reference, whatsapp: whatsappLink(message), items: [...items], subtotal });
+      setPlaced({
+        reference,
+        whatsapp: whatsappLink(message),
+        items: confirmedItems,
+        subtotal: confirmedSubtotal,
+      });
       window.scrollTo({ top: 0 });
       trackEvent("purchase", {
         currency: "RWF",
-        value: subtotal,
-        items: items.map((i) => ({ item_id: i.slug, item_name: i.name, quantity: i.quantity })),
+        value: confirmedSubtotal,
+        items: confirmedItems.map((i) => ({ item_id: i.slug, item_name: i.name, quantity: i.quantity })),
       });
       clearCart();
     } catch {
@@ -430,7 +448,7 @@ export function CheckoutForm({ freeDeliveryThreshold }: CheckoutFormProps) {
           <button
             type="submit"
             disabled={submitting}
-            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-4 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-4 font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
           >
             {submitting ? (
               t.placing

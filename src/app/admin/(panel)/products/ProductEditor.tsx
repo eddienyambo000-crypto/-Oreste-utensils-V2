@@ -11,13 +11,6 @@ import { compressImage } from "@/lib/image";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 import type { Product } from "@/lib/types";
 
-export interface CategoryOption {
-  slug: string;
-  name: string;
-  /** Has a cover photo, so it shows as a department on the homepage. */
-  isDepartment: boolean;
-}
-
 const MAX_PHOTOS = 8;
 const BUCKET = "product-images";
 
@@ -42,31 +35,15 @@ function groupDigits(digits: string): string {
   return digits ? Number(digits).toLocaleString("en-US") : "";
 }
 
-export function ProductEditor({
-  product,
-  categories,
-  defaultCategory,
-}: {
-  product?: Product;
-  categories: CategoryOption[];
-  defaultCategory?: string;
-}) {
+export function ProductEditor({ product }: { product?: Product }) {
   const router = useRouter();
   const isEdit = Boolean(product);
   const cameraRef = useRef<HTMLInputElement>(null);
   const libraryRef = useRef<HTMLInputElement>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
-  const initialCategory =
-    product?.categorySlug ??
-    (categories.some((c) => c.slug === defaultCategory) ? defaultCategory : undefined) ??
-    categories.find((c) => c.isDepartment)?.slug ??
-    categories[0]?.slug ??
-    "";
-
   const [name, setName] = useState(product?.name ?? "");
   const [price, setPrice] = useState(product ? String(product.priceRwf) : "");
-  const [categorySlug, setCategorySlug] = useState(initialCategory);
   const [description, setDescription] = useState(product?.description || product?.shortDescription || "");
   const [photos, setPhotos] = useState<Photo[]>(
     (product?.images ?? []).map((url) => ({ key: url, url, status: "done" })),
@@ -193,7 +170,6 @@ export function ProductEditor({
     const result = await saveProduct({
       id: product?.id,
       name: savedName,
-      categorySlug,
       priceRwf: price,
       description,
       images: doneUrls,
@@ -230,8 +206,6 @@ export function ProductEditor({
     router.refresh();
   }
 
-  const departments = categories.filter((c) => c.isDepartment);
-  const others = categories.filter((c) => !c.isDepartment);
   const fieldClass =
     "mt-1.5 min-h-12 w-full rounded-xl border border-line-strong bg-porcelain px-4 text-base text-ink placeholder:text-ink-faint";
   const busy = saving !== null || deleting;
@@ -438,76 +412,33 @@ export function ProductEditor({
           />
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2">
-          <div>
-            <label htmlFor="price" className="text-sm font-medium text-ink">
-              Price
-            </label>
-            <div className="relative">
-              <input
-                id="price"
-                type="text"
-                inputMode="numeric"
-                required
-                autoComplete="off"
-                enterKeyHint="next"
-                value={groupDigits(price)}
-                onChange={(event) => {
-                  setPrice(digitsOnly(event.target.value));
-                  touch();
-                }}
-                aria-describedby="price-unit"
-                className={`${fieldClass} pr-16 tabular-nums`}
-                placeholder="25,000"
-              />
-              <span
-                id="price-unit"
-                className="pointer-events-none absolute right-4 top-1/2 mt-[3px] -translate-y-1/2 text-sm font-medium text-ink-faint"
-              >
-                RWF
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="category" className="text-sm font-medium text-ink">
-              Category
-            </label>
-            <select
-              id="category"
+        <div className="sm:max-w-xs">
+          <label htmlFor="price" className="text-sm font-medium text-ink">
+            Price
+          </label>
+          <div className="relative">
+            <input
+              id="price"
+              type="text"
+              inputMode="numeric"
               required
-              value={categorySlug}
+              autoComplete="off"
+              enterKeyHint="next"
+              value={groupDigits(price)}
               onChange={(event) => {
-                setCategorySlug(event.target.value);
+                setPrice(digitsOnly(event.target.value));
                 touch();
               }}
-              className={`${fieldClass} cursor-pointer`}
+              aria-describedby="price-unit"
+              className={`${fieldClass} pr-16 tabular-nums`}
+              placeholder="25,000"
+            />
+            <span
+              id="price-unit"
+              className="pointer-events-none absolute right-4 top-1/2 mt-[3px] -translate-y-1/2 text-sm font-medium text-ink-faint"
             >
-              {departments.length > 0 && others.length > 0 ? (
-                <>
-                  <optgroup label="Departments">
-                    {departments.map((c) => (
-                      <option key={c.slug} value={c.slug}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                  <optgroup label="Other categories">
-                    {others.map((c) => (
-                      <option key={c.slug} value={c.slug}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </optgroup>
-                </>
-              ) : (
-                categories.map((c) => (
-                  <option key={c.slug} value={c.slug}>
-                    {c.name}
-                  </option>
-                ))
-              )}
-            </select>
+              RWF
+            </span>
           </div>
         </div>
 
@@ -581,7 +512,7 @@ export function ProductEditor({
           <button
             type="submit"
             disabled={busy || uploading}
-            className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-5 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
+            className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-5 font-semibold text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] disabled:cursor-wait disabled:opacity-70"
           >
             {uploading ? "Uploading photos…" : saving === "save" ? "Saving…" : isEdit ? "Save changes" : "Save product"}
             {!uploading && saving === null && <IconArrowRight className="h-4 w-4" />}

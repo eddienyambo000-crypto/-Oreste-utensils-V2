@@ -11,7 +11,6 @@ export interface ProductRowData {
   id: string;
   name: string;
   slug: string;
-  categoryName: string;
   priceRwf: number;
   image: string | null;
   featured: boolean;
@@ -71,11 +70,7 @@ export function ProductRow({
           >
             {product.name}
           </Link>
-          <p className="mt-0.5 flex min-w-0 items-center gap-1.5 text-sm text-ink-faint">
-            <span className="shrink-0 font-medium tabular-nums text-ink-soft">{formatRwf(product.priceRwf)}</span>
-            <span aria-hidden className="hidden sm:inline">·</span>
-            <span className="hidden truncate sm:inline">{product.categoryName}</span>
-          </p>
+          <p className="mt-0.5 text-sm font-medium tabular-nums text-ink-soft">{formatRwf(product.priceRwf)}</p>
         </div>
 
         <button

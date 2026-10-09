@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CookieSettingsButton } from "./CookieSettingsButton";
 import { BUSINESS } from "@/lib/constants";
 import type { Dictionary } from "@/lib/i18n/dictionaries";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -10,15 +11,6 @@ import {
   IconPhone,
   IconWhatsApp,
 } from "@/components/ui/icons";
-
-const SHOP_LINKS = [
-  { href: "/shop/cookware", label: "Cookware" },
-  { href: "/shop/dinnerware", label: "Dinnerware" },
-  { href: "/shop/cutlery", label: "Cutlery & Tools" },
-  { href: "/shop/serveware", label: "Serveware & Glassware" },
-  { href: "/shop/storage", label: "Storage" },
-  { href: "/shop/small-appliances", label: "Small Appliances" },
-] as const;
 
 export function Footer({
   logoUrl,
@@ -93,16 +85,22 @@ export function Footer({
                   {dict.footer.allProducts}
                 </Link>
               </li>
-              {SHOP_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-ink-soft transition-colors duration-200 hover:text-copper"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
+              <li>
+                <Link
+                  href="/business"
+                  className="text-sm text-ink-soft transition-colors duration-200 hover:text-copper"
+                >
+                  {dict.nav.business}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/testimonials"
+                  className="text-sm text-ink-soft transition-colors duration-200 hover:text-copper"
+                >
+                  {dict.nav.reviews}
+                </Link>
+              </li>
             </ul>
           </nav>
 
@@ -175,6 +173,7 @@ export function Footer({
             >
               {dict.footer.terms}
             </Link>
+            <CookieSettingsButton label={dict.footer.cookieSettings} />
           </nav>
         </div>
 

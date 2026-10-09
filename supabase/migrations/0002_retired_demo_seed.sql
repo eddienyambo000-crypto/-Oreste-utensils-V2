@@ -1,0 +1,9 @@
+-- 0002 · Retired.
+--
+-- This file used to insert a demo catalogue (6 categories, 23 invented
+-- products with stock photos). It was removed so that running the migrations
+-- in order can never put fake products in front of real customers. The live
+-- catalogue is managed from the admin; local development uses src/lib/seed.ts,
+-- which the production deployment never serves.
+--
+-- Intentionally contains no statements.

@@ -76,7 +76,7 @@ export default async function AboutPage() {
         <div className="flex flex-wrap gap-3">
           <Link
             href="/shop"
-            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-6 font-semibold text-white shadow-copper transition-colors duration-200 hover:bg-copper-deep"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-6 font-semibold text-on-copper shadow-copper transition-colors duration-200 hover:bg-copper-deep"
           >
             {dict.hero.cta}
             <IconArrowRight className="h-4 w-4" />

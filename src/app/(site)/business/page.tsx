@@ -37,7 +37,7 @@ export default async function BusinessPage() {
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="#quote"
-            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-7 font-semibold text-white shadow-copper transition-colors duration-200 hover:bg-copper-deep"
+            className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-7 font-semibold text-on-copper shadow-copper transition-colors duration-200 hover:bg-copper-deep"
           >
             {t.ctaQuote}
             <IconArrowRight className="h-4 w-4" />

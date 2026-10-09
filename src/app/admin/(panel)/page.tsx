@@ -60,24 +60,24 @@ export default async function AdminOverviewPage() {
               href={href}
               className={`group flex min-h-20 items-center gap-4 rounded-2xl p-4 transition-[background-color,border-color,transform] duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.99] ${
                 primary
-                  ? "bg-copper text-white shadow-copper hover:bg-copper-deep"
+                  ? "bg-copper text-on-copper shadow-copper hover:bg-copper-deep"
                   : "border border-line bg-surface text-ink hover:border-copper"
               }`}
             >
               <span
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-                  primary ? "bg-white/15" : "bg-cream text-copper"
+                  primary ? "bg-on-copper/15" : "bg-cream text-copper"
                 }`}
               >
                 <Icon className="h-6 w-6" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-semibold">{label}</span>
-                <span className={`block text-sm ${primary ? "text-white/80" : "text-ink-faint"}`}>{hint}</span>
+                <span className={`block text-sm ${primary ? "text-on-copper/80" : "text-ink-faint"}`}>{hint}</span>
               </span>
               <IconArrowRight
                 className={`h-5 w-5 shrink-0 transition-transform duration-200 group-hover:translate-x-0.5 ${
-                  primary ? "text-white/80" : "text-ink-faint"
+                  primary ? "text-on-copper/80" : "text-ink-faint"
                 }`}
               />
             </Link>

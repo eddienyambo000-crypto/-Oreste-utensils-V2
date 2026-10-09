@@ -1,81 +1,16 @@
-import type { Category, Product } from "./types";
+import type { Product } from "./types";
 
 /**
- * Launch catalog. Once Supabase is configured this file is only used as a
- * fallback for local development — the shop manages the live catalog from
- * the admin panel.
+ * Demo catalogue for local development and CI only. It is never served by
+ * the production deployment and never written to the live database: the
+ * shop manages its real catalogue from the admin.
  */
 
-export const seedCategories: Category[] = [
-  {
-    id: "cat-cookware",
-    name: "Cookware",
-    slug: "cookware",
-    description: "Pots, pans, dutch ovens and everything that touches the flame.",
-    intro:
-      "Buy quality cookware in Kigali — enamelled dutch ovens, stainless steel woks, cast-iron cocottes and stovetop kettles, hand-picked for Rwandan kitchens. Every piece is available at our City Plaza store or delivered across Kigali.",
-    image: "/images/cat-cookware.webp",
-    sortOrder: 1,
-  },
-  {
-    id: "cat-dinnerware",
-    name: "Dinnerware",
-    slug: "dinnerware",
-    description: "Stoneware, porcelain and ceramics for the table you gather around.",
-    intro:
-      "Shop dinnerware in Kigali — artisan stoneware dinner sets, ceramic serving bowls and porcelain mugs that turn everyday meals into occasions. See the full range at City Plaza or order for delivery anywhere in Kigali.",
-    image: "/images/cat-dinnerware.webp",
-    sortOrder: 2,
-  },
-  {
-    id: "cat-cutlery",
-    name: "Cutlery & Tools",
-    slug: "cutlery",
-    description: "Forged knives, boards and the tools that do the real work.",
-    intro:
-      "Find professional kitchen knives and prep tools in Kigali — forged knife sets, acacia chopping boards and heat-resistant silicone utensils. The tools chefs actually reach for, now available in Rwanda.",
-    image: "/images/cat-cutlery.webp",
-    sortOrder: 3,
-  },
-  {
-    id: "cat-serveware",
-    name: "Serveware & Glassware",
-    slug: "serveware",
-    description: "Carafes, glasses and trays made for hosting.",
-    intro:
-      "Serveware and glassware in Kigali — glass carafes, wine glasses, whiskey tumblers and acacia serving trays for hosts who take their table seriously. Visit us at City Plaza or order online for Kigali delivery.",
-    image: "/images/cat-serveware.webp",
-    sortOrder: 4,
-  },
-  {
-    id: "cat-storage",
-    name: "Storage & Organisation",
-    slug: "storage",
-    description: "Airtight jars and canisters that keep the pantry beautiful.",
-    intro:
-      "Kitchen storage solutions in Kigali — airtight glass jars and ceramic canister sets that keep ingredients fresh and shelves worth looking at. Available in-store at City Plaza and for delivery across Kigali.",
-    image: "/images/cat-storage.webp",
-    sortOrder: 5,
-  },
-  {
-    id: "cat-small-appliances",
-    name: "Small Appliances",
-    slug: "small-appliances",
-    description: "Blenders, pressure cookers and coffee gear that earn their counter space.",
-    intro:
-      "Shop small kitchen appliances in Kigali — countertop blenders, electric pressure cookers, drip coffee makers and burr grinders from trusted brands. Tested, warrantied and delivered across Kigali.",
-    image: "/images/cat-small-appliances.webp",
-    sortOrder: 6,
-  },
-];
-
 export const seedProducts: Product[] = [
-  // ── Cookware ────────────────────────────────────────────────
   {
     id: "p-ember-dutch-oven",
     name: "Ember Enamelled Dutch Oven — 5.2 L",
     slug: "ember-enamelled-dutch-oven",
-    categorySlug: "cookware",
     priceRwf: 145_000,
     shortDescription:
       "Heavy cast iron under a flame-orange enamel — sears, braises and bakes, then goes straight to the table.",
@@ -96,7 +31,6 @@ export const seedProducts: Product[] = [
     id: "p-meridian-wok",
     name: "Meridian Stainless Wok — 32 cm",
     slug: "meridian-stainless-wok",
-    categorySlug: "cookware",
     priceRwf: 89_000,
     shortDescription:
       "Tri-ply stainless steel with a fitted lid — high-heat stir-fries without the sticking.",
@@ -117,7 +51,6 @@ export const seedProducts: Product[] = [
     id: "p-noir-cocotte",
     name: "Noir Cast-Iron Mini Cocotte — 0.6 L",
     slug: "noir-mini-cocotte",
-    categorySlug: "cookware",
     priceRwf: 48_000,
     shortDescription:
       "Single-serve cast iron for soups, baked eggs and desserts — oven to table in one piece.",
@@ -138,7 +71,6 @@ export const seedProducts: Product[] = [
     id: "p-stovetop-kettle",
     name: "Classic Stovetop Kettle — 2.5 L",
     slug: "classic-stovetop-kettle",
-    categorySlug: "cookware",
     priceRwf: 42_000,
     shortDescription:
       "Polished stainless kettle with a heat-shielded handle — icyayi the traditional way.",
@@ -159,7 +91,6 @@ export const seedProducts: Product[] = [
     id: "p-bamboo-steamer",
     name: "Bamboo Steamer — 2 Tier, 25 cm",
     slug: "bamboo-steamer",
-    categorySlug: "cookware",
     priceRwf: 28_000,
     shortDescription:
       "Two-tier natural bamboo — steam vegetables, fish and dumplings without losing a single nutrient.",
@@ -176,13 +107,10 @@ export const seedProducts: Product[] = [
     inStock: true,
     createdAt: "2026-07-01T08:20:00Z",
   },
-
-  // ── Dinnerware ──────────────────────────────────────────────
   {
     id: "p-artisan-dinner-set",
     name: "Artisan Stoneware Dinner Set — 12 Piece",
     slug: "artisan-stoneware-dinner-set",
-    categorySlug: "dinnerware",
     priceRwf: 185_000,
     shortDescription:
       "Hand-glazed stoneware for four — dinner plates, side plates and bowls with quietly imperfect edges.",
@@ -203,7 +131,6 @@ export const seedProducts: Product[] = [
     id: "p-duo-serving-bowls",
     name: "Duo Ceramic Serving Bowls",
     slug: "duo-ceramic-serving-bowls",
-    categorySlug: "dinnerware",
     priceRwf: 34_000,
     shortDescription:
       "A nesting pair of glazed ceramic bowls — patterned outside, food-safe glaze inside.",
@@ -224,7 +151,6 @@ export const seedProducts: Product[] = [
     id: "p-everyday-mug",
     name: "Everyday Porcelain Mug — 350 ml",
     slug: "everyday-porcelain-mug",
-    categorySlug: "dinnerware",
     priceRwf: 12_000,
     shortDescription:
       "Clean white porcelain with a balanced handle — the mug you'll reach for every single morning.",
@@ -245,7 +171,6 @@ export const seedProducts: Product[] = [
     id: "p-barista-mug",
     name: "Barista Stoneware Mug — 300 ml",
     slug: "barista-stoneware-mug",
-    categorySlug: "dinnerware",
     priceRwf: 15_000,
     shortDescription:
       "Weighted stoneware with a matte glaze — built for slow coffee and strong Rwandan beans.",
@@ -262,13 +187,10 @@ export const seedProducts: Product[] = [
     inStock: true,
     createdAt: "2026-07-01T08:40:00Z",
   },
-
-  // ── Cutlery & Tools ─────────────────────────────────────────
   {
     id: "p-forged-knife-set",
     name: "Forged 5-Piece Knife Set with Leather Roll",
     slug: "forged-knife-set",
-    categorySlug: "cutlery",
     priceRwf: 165_000,
     shortDescription:
       "High-carbon forged blades with pakkawood handles — chef's, santoku, utility, carving fork and steel, in a leather roll.",
@@ -289,7 +211,6 @@ export const seedProducts: Product[] = [
     id: "p-silicone-utensil-trio",
     name: "Silicone Utensil Trio",
     slug: "silicone-utensil-trio",
-    categorySlug: "cutlery",
     priceRwf: 22_000,
     shortDescription:
       "Three heat-resistant silicone spoons that won't scratch your non-stick pans — ever.",
@@ -310,7 +231,6 @@ export const seedProducts: Product[] = [
     id: "p-acacia-board-set",
     name: "Acacia Board Set — 2 Boards + Crock",
     slug: "acacia-board-set",
-    categorySlug: "cutlery",
     priceRwf: 38_000,
     shortDescription:
       "Two solid acacia boards and a ceramic utensil crock — the prep station, sorted.",
@@ -327,13 +247,10 @@ export const seedProducts: Product[] = [
     inStock: true,
     createdAt: "2026-07-01T08:55:00Z",
   },
-
-  // ── Serveware & Glassware ───────────────────────────────────
   {
     id: "p-glass-carafe",
     name: "Glass Carafe & Tumbler Set",
     slug: "glass-carafe-set",
-    categorySlug: "serveware",
     priceRwf: 45_000,
     shortDescription:
       "A 1.2 L pouring carafe with matching tumblers — water, juice or milk, served properly.",
@@ -354,7 +271,6 @@ export const seedProducts: Product[] = [
     id: "p-highball-glasses",
     name: "Highball Glasses — Set of 6",
     slug: "highball-glasses",
-    categorySlug: "serveware",
     priceRwf: 32_000,
     shortDescription:
       "Six tall, heavy-based highballs — for iced tea, juice and long drinks that need room for ice.",
@@ -375,7 +291,6 @@ export const seedProducts: Product[] = [
     id: "p-whiskey-tumblers",
     name: "Whiskey Tumblers — Set of 4",
     slug: "whiskey-tumblers",
-    categorySlug: "serveware",
     priceRwf: 38_000,
     shortDescription:
       "Four heavy-bottomed rocks glasses with a faceted base that catches the light.",
@@ -396,7 +311,6 @@ export const seedProducts: Product[] = [
     id: "p-wine-glasses",
     name: "Stemmed Wine Glasses — Set of 6",
     slug: "stemmed-wine-glasses",
-    categorySlug: "serveware",
     priceRwf: 54_000,
     shortDescription:
       "Six fine-rimmed, laser-cut stemmed glasses — the universal shape that flatters every bottle.",
@@ -417,7 +331,6 @@ export const seedProducts: Product[] = [
     id: "p-acacia-tray",
     name: "Acacia Serving Tray & Bowl Set",
     slug: "acacia-serving-tray",
-    categorySlug: "serveware",
     priceRwf: 58_000,
     shortDescription:
       "A carved acacia tray with two matching bowls — fruit, snacks or the full grazing spread.",
@@ -434,13 +347,10 @@ export const seedProducts: Product[] = [
     inStock: true,
     createdAt: "2026-07-01T09:20:00Z",
   },
-
-  // ── Storage & Organisation ──────────────────────────────────
   {
     id: "p-airtight-jar",
     name: "Airtight Glass Jar — 1 L",
     slug: "airtight-glass-jar",
-    categorySlug: "storage",
     priceRwf: 9_500,
     shortDescription:
       "Screw-top clarity for rice, beans, spices and flour — see what you have, keep it fresh.",
@@ -461,7 +371,6 @@ export const seedProducts: Product[] = [
     id: "p-atelier-canisters",
     name: "Atelier Ceramic Canister Set",
     slug: "atelier-canister-set",
-    categorySlug: "storage",
     priceRwf: 65_000,
     shortDescription:
       "Speckled two-tone ceramic canisters — coffee, sugar and tea storage that deserves the counter.",
@@ -478,13 +387,10 @@ export const seedProducts: Product[] = [
     inStock: true,
     createdAt: "2026-07-01T09:30:00Z",
   },
-
-  // ── Small Appliances ────────────────────────────────────────
   {
     id: "p-pro-blender",
     name: "Pro Countertop Blender — 1.5 L",
     slug: "pro-countertop-blender",
-    categorySlug: "small-appliances",
     priceRwf: 95_000,
     shortDescription:
       "1000 W motor, hardened blades and a 1.5 L glass jug — smoothies, sauces and ibinyomoro juice in seconds.",
@@ -505,7 +411,6 @@ export const seedProducts: Product[] = [
     id: "p-pressure-cooker",
     name: "8-in-1 Electric Pressure Cooker — 6 L",
     slug: "electric-pressure-cooker",
-    categorySlug: "small-appliances",
     priceRwf: 135_000,
     shortDescription:
       "Pressure cook, slow cook, steam, sauté and more — beans in 30 minutes instead of 3 hours.",
@@ -526,7 +431,6 @@ export const seedProducts: Product[] = [
     id: "p-drip-coffee-maker",
     name: "Drip Coffee Maker — 10 Cup",
     slug: "drip-coffee-maker",
-    categorySlug: "small-appliances",
     priceRwf: 78_000,
     shortDescription:
       "Precision-temperature brewing with a glass carafe — do justice to Rwandan coffee at home.",
@@ -547,7 +451,6 @@ export const seedProducts: Product[] = [
     id: "p-burr-grinder",
     name: "Precision Burr Coffee Grinder",
     slug: "burr-coffee-grinder",
-    categorySlug: "small-appliances",
     priceRwf: 88_000,
     shortDescription:
       "Conical steel burrs with 40 grind settings — from French press to espresso-fine.",

@@ -8,15 +8,13 @@
     "start": "next start -p 3012",
     "lint": "eslint",
     "test": "vitest run",
-    "test:watch": "vitest",
-    "seed:sql": "node --experimental-strip-types scripts/generate-seed-sql.mjs",
-    "seed:supabase": "node --experimental-strip-types scripts/seed-supabase.mjs"
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.8",
     "@vercel/analytics": "^2.0.1",
-    "next": "16.2.11",
+    "next": "16.4.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "zod": "^4.4.3"
@@ -27,7 +25,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.11",
+    "eslint-config-next": "16.4.0",
     "puppeteer-core": "^25.3.0",
     "tailwindcss": "^4",
     "typescript": "^5",

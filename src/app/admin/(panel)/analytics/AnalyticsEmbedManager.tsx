@@ -62,7 +62,7 @@ export function AnalyticsEmbedManager({ initialUrl }: { initialUrl: string | nul
               type="button"
               onClick={() => save(url)}
               disabled={saving}
-              className="cursor-pointer rounded-full bg-copper px-5 py-2.5 text-sm font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:opacity-70"
+              className="cursor-pointer rounded-full bg-copper px-5 py-2.5 text-sm font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98] disabled:opacity-70"
             >
               {saving ? "Saving…" : "Save dashboard"}
             </button>

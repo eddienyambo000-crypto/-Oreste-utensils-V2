@@ -1,7 +1,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Anon-key client for public catalog reads (products, categories, settings).
+ * Anon-key client for public catalog reads (products, settings).
  * Safe on server and client — RLS restricts what the anon role can touch.
  */
 

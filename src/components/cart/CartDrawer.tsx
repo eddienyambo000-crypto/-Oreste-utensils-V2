@@ -195,7 +195,7 @@ export function CartDrawer({ freeDeliveryThreshold }: { freeDeliveryThreshold: n
               <Link
                 href="/cart"
                 onClick={closeCart}
-                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-3.5 font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+                className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 py-3.5 font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
               >
                 {dict.cart.checkout}
                 <IconArrowRight className="h-4 w-4" />

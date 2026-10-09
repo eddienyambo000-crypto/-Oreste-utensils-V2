@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { LOCALE_COOKIE, type Locale } from "./config";
-import { dictionaries, type Dictionary } from "./dictionaries";
+import type { Dictionary } from "./dictionaries";
 
 interface LanguageContextValue {
   locale: Locale;
@@ -20,16 +20,18 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
 /**
- * Holds the active locale for client components. The initial value comes from
- * the server (cookie), so client and server render the same language with no
- * hydration mismatch. Switching writes the cookie and refreshes so the
- * server-rendered pages re-render in the new language too.
+ * Holds the active locale for client components. The server passes in only
+ * the active dictionary (from the locale cookie), so a phone never downloads
+ * the other languages and client and server render the same text. Switching
+ * writes the cookie and refreshes, and the server sends the new dictionary.
  */
 export function LanguageProvider({
   locale,
+  dict,
   children,
 }: {
   locale: Locale;
+  dict: Dictionary;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -48,8 +50,8 @@ export function LanguageProvider({
   );
 
   const value = useMemo<LanguageContextValue>(
-    () => ({ locale, dict: dictionaries[locale], setLocale }),
-    [locale, setLocale],
+    () => ({ locale, dict, setLocale }),
+    [locale, dict, setLocale],
   );
 
   return (

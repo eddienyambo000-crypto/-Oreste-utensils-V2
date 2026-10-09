@@ -1,27 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   absoluteUrl,
-  categoriesWithProducts,
-  departments,
   filterProducts,
   homepageRail,
   parseShopQuery,
+  relatedProducts,
   shopQueryString,
 } from "./catalog";
-import type { Category, Product } from "./types";
-
-function category(over: Partial<Category>): Category {
-  return {
-    id: over.slug ?? "c",
-    name: "Cat",
-    slug: "cat",
-    description: "",
-    intro: "",
-    image: "",
-    sortOrder: 10,
-    ...over,
-  };
-}
+import type { Product } from "./types";
 
 let seq = 0;
 function product(over: Partial<Product>): Product {
@@ -30,7 +16,6 @@ function product(over: Partial<Product>): Product {
     id: `p${seq}`,
     name: "Item",
     slug: `item-${seq}`,
-    categorySlug: "cookware",
     priceRwf: 10_000,
     shortDescription: "",
     description: "",
@@ -42,44 +27,6 @@ function product(over: Partial<Product>): Product {
     ...over,
   };
 }
-
-describe("categoriesWithProducts", () => {
-  it("drops empty categories and counts the rest, in display order", () => {
-    const cats = [
-      category({ slug: "kettle", sortOrder: 10 }), // empty, mistyped admin label
-      category({ slug: "dinnerware", sortOrder: 2 }),
-      category({ slug: "cookware", sortOrder: 1 }),
-    ];
-    const prods = [
-      product({ categorySlug: "dinnerware" }),
-      product({ categorySlug: "cookware" }),
-      product({ categorySlug: "cookware" }),
-    ];
-    expect(
-      categoriesWithProducts(cats, prods).map((e) => [e.category.slug, e.count]),
-    ).toEqual([
-      ["cookware", 2],
-      ["dinnerware", 1],
-    ]);
-  });
-
-  it("is empty when there are no products", () => {
-    expect(categoriesWithProducts([category({ slug: "cookware" })], [])).toEqual([]);
-  });
-});
-
-describe("departments", () => {
-  it("keeps only categories with a cover photo, ordered and capped", () => {
-    const cats = [
-      category({ slug: "blenda", image: "" }),
-      category({ slug: "b", image: "/b.webp", sortOrder: 2 }),
-      category({ slug: "a", image: "/a.webp", sortOrder: 1 }),
-      category({ slug: "c", image: "  " }),
-    ];
-    expect(departments(cats).map((c) => c.slug)).toEqual(["a", "b"]);
-    expect(departments(cats, 1).map((c) => c.slug)).toEqual(["a"]);
-  });
-});
 
 describe("homepageRail", () => {
   it("shows featured products first, in-stock before sold-out", () => {
@@ -114,53 +61,71 @@ describe("homepageRail", () => {
   });
 });
 
-describe("parseShopQuery / shopQueryString", () => {
-  it("reads valid params and round-trips them", () => {
-    const query = parseShopQuery({ category: "cookware", q: "  wok ", sort: "price-asc" });
-    expect(query).toEqual({ category: "cookware", q: "wok", sort: "price-asc" });
-    expect(shopQueryString(query)).toBe("?category=cookware&q=wok&sort=price-asc");
+describe("relatedProducts", () => {
+  it("never suggests the product itself or one without a photo", () => {
+    const current = product({});
+    const noPhoto = product({ images: [] });
+    const other = product({});
+    expect(relatedProducts([current, noPhoto, other], current).map((p) => p.id)).toEqual([other.id]);
   });
 
-  it("falls back safely on malformed input", () => {
-    const query = parseShopQuery({ category: "<script>", sort: "cheapest", q: undefined });
-    expect(query).toEqual({ category: null, q: "", sort: "newest" });
+  it("puts in-stock first, then starred, then newest, and caps the list", () => {
+    const current = product({});
+    const soldOut = product({ inStock: false, featured: true, createdAt: "2026-05-01T00:00:00Z" });
+    const starred = product({ featured: true, createdAt: "2026-02-01T00:00:00Z" });
+    const newest = product({ createdAt: "2026-04-01T00:00:00Z" });
+    const oldest = product({ createdAt: "2026-01-15T00:00:00Z" });
+    const list = relatedProducts([current, soldOut, starred, newest, oldest], current, 3);
+    expect(list.map((p) => p.id)).toEqual([starred.id, newest.id, oldest.id]);
+  });
+});
+
+describe("parseShopQuery / shopQueryString", () => {
+  it("reads valid params and round-trips them", () => {
+    const query = parseShopQuery({ q: "  wok ", sort: "price-asc" });
+    expect(query).toEqual({ q: "wok", sort: "price-asc" });
+    expect(shopQueryString(query)).toBe("?q=wok&sort=price-asc");
+  });
+
+  it("falls back safely on malformed input and ignores old category links", () => {
+    const query = parseShopQuery({ category: "cookware", sort: "cheapest", q: undefined });
+    expect(query).toEqual({ q: "", sort: "newest" });
     expect(shopQueryString(query)).toBe("");
   });
 
   it("takes the first value of repeated params and caps search length", () => {
-    const query = parseShopQuery({ category: ["dinnerware", "x"], q: "a".repeat(200) });
-    expect(query.category).toBe("dinnerware");
+    const query = parseShopQuery({ q: ["a".repeat(200), "x"], sort: ["price-desc", "newest"] });
     expect(query.q).toHaveLength(80);
+    expect(query.sort).toBe("price-desc");
   });
 });
 
 describe("filterProducts", () => {
-  const kettle = product({ name: "Classic Stovetop Kettle", categorySlug: "cookware", priceRwf: 42_000 });
-  const teapot = product({ name: "Théière en céramique", categorySlug: "dinnerware", priceRwf: 15_000 });
-  const wok = product({ name: "Stainless Wok", categorySlug: "cookware", priceRwf: 89_000 });
+  const kettle = product({ name: "Classic Stovetop Kettle", priceRwf: 42_000 });
+  const teapot = product({ name: "Théière en céramique", priceRwf: 15_000 });
+  const wok = product({ name: "Stainless Wok", shortDescription: "Carbon steel, 32 cm", priceRwf: 89_000 });
   const all = [kettle, teapot, wok];
 
-  it("filters by category", () => {
-    const result = filterProducts(all, { category: "cookware", q: "", sort: "newest" });
-    expect(result.map((p) => p.id).sort()).toEqual([kettle.id, wok.id].sort());
+  it("requires every search word, ignoring case and accents", () => {
+    expect(filterProducts(all, { q: "theiere ceramique", sort: "newest" })).toEqual([teapot]);
+    expect(filterProducts(all, { q: "STOVETOP kettle", sort: "newest" })).toEqual([kettle]);
+    expect(filterProducts(all, { q: "kettle wok", sort: "newest" })).toEqual([]);
   });
 
-  it("requires every search word, ignoring case and accents", () => {
-    expect(filterProducts(all, { category: null, q: "theiere ceramique", sort: "newest" })).toEqual([teapot]);
-    expect(filterProducts(all, { category: null, q: "STOVETOP kettle", sort: "newest" })).toEqual([kettle]);
-    expect(filterProducts(all, { category: null, q: "kettle wok", sort: "newest" })).toEqual([]);
+  it("also searches the description", () => {
+    expect(filterProducts(all, { q: "carbon 32", sort: "newest" })).toEqual([wok]);
   });
 
   it("sorts by price both ways", () => {
-    const asc = filterProducts(all, { category: null, q: "", sort: "price-asc" });
+    const asc = filterProducts(all, { q: "", sort: "price-asc" });
     expect(asc.map((p) => p.priceRwf)).toEqual([15_000, 42_000, 89_000]);
-    const desc = filterProducts(all, { category: null, q: "", sort: "price-desc" });
+    const desc = filterProducts(all, { q: "", sort: "price-desc" });
     expect(desc.map((p) => p.priceRwf)).toEqual([89_000, 42_000, 15_000]);
   });
 
   it("does not mutate the input", () => {
     const copy = [...all];
-    filterProducts(all, { category: null, q: "", sort: "price-asc" });
+    filterProducts(all, { q: "", sort: "price-asc" });
     expect(all).toEqual(copy);
   });
 });

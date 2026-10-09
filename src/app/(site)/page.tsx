@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CatalogNotice } from "@/components/shop/CatalogNotice";
 import { ProductRail } from "@/components/shop/ProductRail";
 import { ServiceFacts } from "@/components/shop/ServiceFacts";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
@@ -11,33 +12,27 @@ import {
   IconPhone,
   IconTruck,
 } from "@/components/ui/icons";
-import { departments, homepageRail } from "@/lib/catalog";
+import { homepageRail } from "@/lib/catalog";
 import { BUSINESS } from "@/lib/constants";
-import {
-  getCategories,
-  getFreeDeliveryThreshold,
-  getProducts,
-  getSiteImages,
-  getTestimonials,
-} from "@/lib/data";
+import { getFreeDeliveryThreshold, getProducts, getSiteImages, getTestimonials } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
-import type { Category, Product } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
 /** The homepage degrades gracefully: if the catalogue can't load, the shop
- *  page reports it; here the product sections simply step aside. */
-async function loadCatalog(): Promise<{ products: Product[]; categories: Category[] }> {
+ *  page reports it; here the product section simply steps aside. An empty
+ *  catalogue is a different, honest state with its own message. */
+async function loadCatalog(): Promise<{ ok: boolean; products: Product[] }> {
   try {
-    const [products, categories] = await Promise.all([getProducts(), getCategories()]);
-    return { products, categories };
+    return { ok: true, products: await getProducts() };
   } catch (error) {
     console.error("[home] catalogue failed to load:", error);
-    return { products: [], categories: [] };
+    return { ok: false, products: [] };
   }
 }
 
 export default async function HomePage() {
-  const [{ products, categories }, testimonials, siteImages, threshold, dict] = await Promise.all([
+  const [catalog, testimonials, siteImages, threshold, dict] = await Promise.all([
     loadCatalog(),
     getTestimonials(),
     getSiteImages(),
@@ -46,8 +41,7 @@ export default async function HomePage() {
   ]);
   const h = dict.hero;
   const t = dict.home;
-  const rail = homepageRail(products);
-  const depts = departments(categories);
+  const rail = homepageRail(catalog.products);
 
   return (
     <>
@@ -70,7 +64,7 @@ export default async function HomePage() {
             <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
               <Link
                 href="/shop"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-7 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-7 font-semibold text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
               >
                 {h.cta}
                 <IconArrowRight className="h-4 w-4" />
@@ -117,60 +111,23 @@ export default async function HomePage() {
       </section>
 
       {/* ── Real products, chosen in the admin ───────────────── */}
-      <div className="border-t border-line bg-surface">
-        <ProductRail
-          id="new-in-store"
-          title={t.railTitle}
-          actionLabel={t.railAction}
-          actionHref="/shop"
-          products={rail}
-        />
-      </div>
-
-      {/* ── Departments ──────────────────────────────────────── */}
-      {depts.length > 0 && (
-        <section aria-labelledby="departments" className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-20">
-          <div className="flex items-end justify-between gap-4">
-            <h2 id="departments" className="font-display text-2xl font-semibold tracking-[-0.02em] sm:text-3xl">
-              {t.deptTitle}
-            </h2>
-            <Link
-              href="/shop"
-              className="inline-flex shrink-0 items-center gap-1.5 py-2 text-sm font-semibold text-copper transition-colors duration-200 hover:text-copper-deep"
-            >
-              {t.deptAction}
-              <IconArrowRight className="h-4 w-4" />
-            </Link>
+      {rail.length > 0 ? (
+        <div className="border-t border-line">
+          <ProductRail
+            id="new-in-store"
+            title={t.railTitle}
+            actionLabel={t.railAction}
+            actionHref="/shop"
+            products={rail}
+          />
+        </div>
+      ) : (
+        catalog.ok &&
+        catalog.products.length === 0 && (
+          <div className="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
+            <CatalogNotice kind="empty" dict={dict} />
           </div>
-          <ul role="list" className="mt-7 grid grid-cols-2 gap-x-4 gap-y-7 sm:gap-x-6 lg:grid-cols-3">
-            {depts.map((dept) => (
-              <li key={dept.id}>
-                <Link href={`/shop/${dept.slug}`} className="group block">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-cream">
-                    {/* Below the fold: lazy, so it never competes with the hero photo. */}
-                    <Image
-                      src={dept.image}
-                      alt=""
-                      fill
-                      sizes="(max-width: 640px) 50vw, (max-width: 1024px) 45vw, 400px"
-                      className="object-cover transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.03]"
-                    />
-                  </div>
-                  <h3 className="mt-3 flex items-center gap-1.5 font-display text-lg font-semibold transition-colors duration-200 group-hover:text-copper">
-                    {dept.name}
-                    <IconArrowRight
-                      aria-hidden
-                      className="h-4 w-4 -translate-x-1 opacity-0 transition-[opacity,transform] duration-200 group-hover:translate-x-0 group-hover:opacity-100"
-                    />
-                  </h3>
-                  {dept.description && (
-                    <p className="mt-1 line-clamp-2 text-sm leading-relaxed text-ink-soft">{dept.description}</p>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+        )
       )}
 
       {/* ── The shop + how ordering works ────────────────────── */}
@@ -216,38 +173,38 @@ export default async function HomePage() {
 
             <dl className="mt-6 grid gap-3 text-sm sm:grid-cols-3">
               <div className="flex items-start gap-2">
-                <IconMapPin aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
-                <div>
-                  <dt className="sr-only">{dict.contact.address}</dt>
-                  <dd>
-                    <a
-                      href={BUSINESS.mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-copper"
-                    >
-                      {BUSINESS.address.street}, {BUSINESS.address.city}
-                    </a>
-                  </dd>
-                </div>
+                <dt className="shrink-0">
+                  <IconMapPin aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                  <span className="sr-only">{dict.contact.address}</span>
+                </dt>
+                <dd>
+                  <a
+                    href={BUSINESS.mapsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-medium text-ink underline decoration-line-strong underline-offset-4 hover:decoration-copper"
+                  >
+                    {BUSINESS.address.street}, {BUSINESS.address.city}
+                  </a>
+                </dd>
               </div>
               <div className="flex items-start gap-2">
-                <IconClock aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
-                <div>
-                  <dt className="sr-only">{dict.contact.hours}</dt>
-                  <dd className="font-medium text-ink">{h.factHours}</dd>
-                </div>
+                <dt className="shrink-0">
+                  <IconClock aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                  <span className="sr-only">{dict.contact.hours}</span>
+                </dt>
+                <dd className="font-medium text-ink">{h.factHours}</dd>
               </div>
               <div className="flex items-start gap-2">
-                <IconPhone aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
-                <div>
-                  <dt className="sr-only">{dict.contact.phone}</dt>
-                  <dd>
-                    <a href={`tel:${BUSINESS.phoneE164}`} className="font-medium text-ink hover:text-copper">
-                      {BUSINESS.phoneDisplay}
-                    </a>
-                  </dd>
-                </div>
+                <dt className="shrink-0">
+                  <IconPhone aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-copper" />
+                  <span className="sr-only">{dict.contact.phone}</span>
+                </dt>
+                <dd>
+                  <a href={`tel:${BUSINESS.phoneE164}`} className="font-medium text-ink hover:text-copper">
+                    {BUSINESS.phoneDisplay}
+                  </a>
+                </dd>
               </div>
             </dl>
           </div>

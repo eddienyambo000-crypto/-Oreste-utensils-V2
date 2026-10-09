@@ -17,7 +17,7 @@ export default function AdminError({ reset }: { reset: () => void }) {
         <button
           type="button"
           onClick={reset}
-          className="cursor-pointer rounded-full bg-copper px-6 py-2.5 text-sm font-semibold text-white transition-colors duration-200 hover:bg-copper-deep active:scale-[0.98]"
+          className="cursor-pointer rounded-full bg-copper px-6 py-2.5 text-sm font-semibold text-on-copper transition-colors duration-200 hover:bg-copper-deep active:scale-[0.98]"
         >
           Try again
         </button>

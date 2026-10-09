@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ProductList } from "./ProductList";
 import type { ProductRowData } from "./ProductRow";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
-import { getCategories } from "@/lib/data";
 import { IconCamera, IconPlus } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
@@ -13,7 +12,6 @@ interface ProductListRow {
   id: string;
   name: string;
   slug: string;
-  category_slug: string;
   price_rwf: number;
   images: string[] | null;
   featured: boolean;
@@ -28,21 +26,18 @@ export default async function AdminProductsPage({
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
 
-  const [{ data, error }, categories, { saved }] = await Promise.all([
+  const [{ data, error }, { saved }] = await Promise.all([
     supabase
       .from("ou_products")
-      .select("id, name, slug, category_slug, price_rwf, images, featured, in_stock")
+      .select("id, name, slug, price_rwf, images, featured, in_stock")
       .order("created_at", { ascending: false }),
-    getCategories(),
     searchParams,
   ]);
 
-  const nameBySlug = new Map(categories.map((c) => [c.slug, c.name]));
   const rows: ProductRowData[] = ((data ?? []) as ProductListRow[]).map((p) => ({
     id: p.id,
     name: p.name,
     slug: p.slug,
-    categoryName: nameBySlug.get(p.category_slug) ?? p.category_slug,
     priceRwf: p.price_rwf,
     image: p.images?.[0] ?? null,
     featured: p.featured,
@@ -57,7 +52,7 @@ export default async function AdminProductsPage({
         </h1>
         <Link
           href="/admin/products/new"
-          className="hidden min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-copper px-5 text-sm font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] md:inline-flex"
+          className="hidden min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-copper px-5 text-sm font-semibold text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-copper active:scale-[0.98] md:inline-flex"
         >
           <IconPlus className="h-4 w-4" />
           Add product
@@ -83,7 +78,7 @@ export default async function AdminProductsPage({
           </p>
           <Link
             href="/admin/products/new"
-            className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-6 font-semibold text-white shadow-copper transition-colors duration-200 hover:bg-copper-deep"
+            className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-copper px-6 font-semibold text-on-copper shadow-copper transition-colors duration-200 hover:bg-copper-deep"
           >
             <IconPlus className="h-4 w-4" />
             Add product

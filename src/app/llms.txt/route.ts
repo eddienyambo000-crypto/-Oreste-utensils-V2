@@ -1,21 +1,19 @@
-import { categoriesWithProducts } from "@/lib/catalog";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
-import { getCategories, getFreeDeliveryThreshold, getProducts } from "@/lib/data";
+import { getFreeDeliveryThreshold, getProducts } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 
 // A plain-text summary for AI assistants (llmstxt.org), generated from the
-// same data as the site so the delivery threshold and departments never drift.
+// same data as the site so the delivery threshold and product count never drift.
 export const revalidate = 3600;
 
 export async function GET() {
   const threshold = await getFreeDeliveryThreshold();
-  let departments: string[] = [];
+  let catalogueLine = "";
   try {
-    const [categories, products] = await Promise.all([getCategories(), getProducts()]);
-    departments = categoriesWithProducts(categories, products).map(
-      ({ category, count }) =>
-        `- [${category.name}](${SITE_URL}/shop/${category.slug}) — ${count} product${count === 1 ? "" : "s"}`,
-    );
+    const count = (await getProducts()).length;
+    if (count > 0) {
+      catalogueLine = `- Online catalogue: ${count} product${count === 1 ? "" : "s"} listed at ${SITE_URL}/shop`;
+    }
   } catch {
     // Catalogue unavailable: the facts below still stand.
   }
@@ -34,7 +32,8 @@ export async function GET() {
 - Ordering: add items to the cart on the website and check out; the order is then confirmed on WhatsApp. Customers can also message the shop on WhatsApp or visit in person.
 - Businesses: restaurants, hotels, cafés and institutions can request a trade quote at ${SITE_URL}/business
 - Currency: Rwandan franc (RWF)
-${departments.length > 0 ? `\n## Departments\n\n${departments.join("\n")}\n` : ""}
+${catalogueLine}
+
 ## Links
 
 - Shop: ${SITE_URL}/shop

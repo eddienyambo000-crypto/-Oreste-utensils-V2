@@ -49,7 +49,7 @@ export function MobileNav() {
               {count > 0 && (
                 <span
                   key={count}
-                  className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 animate-bump items-center justify-center rounded-full bg-copper px-1 text-[0.6rem] font-bold tabular-nums text-white"
+                  className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 animate-bump items-center justify-center rounded-full bg-copper px-1 text-[0.6rem] font-bold tabular-nums text-on-copper"
                 >
                   {count > 99 ? "99+" : count}
                 </span>

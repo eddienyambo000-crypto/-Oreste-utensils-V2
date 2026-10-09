@@ -7,10 +7,13 @@
   --color-surface: #fffdf9;
   --color-ink: #211c15;
   --color-ink-soft: #5d564a;
-  --color-ink-faint: #7d7466;
+  --color-ink-faint: #6e6557;
   --color-copper: #a5552a;
   --color-copper-deep: #86421f;
   --color-copper-tint: #f4e4d4;
+  /* Text on copper fills: white on the light theme's deep copper, near-black
+     on the dark theme's brighter copper (both >= 5.3:1). */
+  --color-on-copper: #ffffff;
   --color-sage: #647257;
   /* WhatsApp teal-green: >=3:1 as a graphic on both themes (bright #25D366 is not). */
   --color-whatsapp: #128c7e;
@@ -84,10 +87,11 @@
     --color-surface: #201a12;
     --color-ink: #f4eee2;
     --color-ink-soft: #b9ad99;
-    --color-ink-faint: #8b8071;
+    --color-ink-faint: #998e7e;
     --color-copper: #cf7739;
     --color-copper-deep: #e0864a;
     --color-copper-tint: #37281b;
+    --color-on-copper: #1a1209;
     --color-sage: #9fb07d;
     --color-line: #322a1e;
     --color-line-strong: #453a29;
@@ -102,10 +106,11 @@
   --color-surface: #201a12;
   --color-ink: #f4eee2;
   --color-ink-soft: #b9ad99;
-  --color-ink-faint: #8b8071;
+  --color-ink-faint: #998e7e;
   --color-copper: #cf7739;
   --color-copper-deep: #e0864a;
   --color-copper-tint: #37281b;
+  --color-on-copper: #1a1209;
   --color-sage: #9fb07d;
   --color-line: #322a1e;
   --color-line-strong: #453a29;

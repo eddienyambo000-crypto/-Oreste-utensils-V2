@@ -1,26 +1,7 @@
-/**
- * Category slug. The launch set is cookware, dinnerware, cutlery, storage,
- * small-appliances and serveware, but categories are managed from the admin
- * panel so any slug is valid at runtime.
- */
-export type CategorySlug = string;
-
-export interface Category {
-  id: string;
-  name: string;
-  slug: CategorySlug;
-  description: string;
-  /** Longer crawlable intro shown on the category landing page. */
-  intro: string;
-  image: string;
-  sortOrder: number;
-}
-
 export interface Product {
   id: string;
   name: string;
   slug: string;
-  categorySlug: CategorySlug;
   priceRwf: number;
   /** One-line summary used on cards and meta descriptions. */
   shortDescription: string;

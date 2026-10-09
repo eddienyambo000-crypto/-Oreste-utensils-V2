@@ -1,10 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ProductEditor } from "../ProductEditor";
-import { categoryOptions } from "../categoryOptions";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
-import { getCategories } from "@/lib/data";
-import type { CategorySlug, Product } from "@/lib/types";
+import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Edit product" };
@@ -13,7 +11,6 @@ interface ProductRow {
   id: string;
   name: string;
   slug: string;
-  category_slug: CategorySlug;
   price_rwf: number;
   short_description: string;
   description: string;
@@ -33,10 +30,8 @@ export default async function EditProductPage({
   const { supabase } = await requireAdmin();
   if (!supabase) return null;
 
-  const [{ data }, categories] = await Promise.all([
-    supabase.from("ou_products").select("*").eq("id", id).maybeSingle(),
-    getCategories(),
-  ]);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  const { data } = await supabase.from("ou_products").select("*").eq("id", id).maybeSingle();
 
   if (!data) notFound();
   const row = data as ProductRow;
@@ -45,7 +40,6 @@ export default async function EditProductPage({
     id: row.id,
     name: row.name,
     slug: row.slug,
-    categorySlug: row.category_slug,
     priceRwf: row.price_rwf,
     shortDescription: row.short_description,
     description: row.description,
@@ -56,10 +50,5 @@ export default async function EditProductPage({
     createdAt: row.created_at,
   };
 
-  return (
-    <ProductEditor
-      product={product}
-      categories={categoryOptions(categories)}
-    />
-  );
+  return <ProductEditor product={product} />;
 }

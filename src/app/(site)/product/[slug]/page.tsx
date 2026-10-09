@@ -6,14 +6,9 @@ import { CatalogNotice } from "@/components/shop/CatalogNotice";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductGallery } from "@/components/shop/ProductGallery";
 import { ServiceFacts } from "@/components/shop/ServiceFacts";
-import { absoluteUrl } from "@/lib/catalog";
+import { absoluteUrl, relatedProducts } from "@/lib/catalog";
 import { BUSINESS, SITE_URL } from "@/lib/constants";
-import {
-  getCategories,
-  getFreeDeliveryThreshold,
-  getProductBySlug,
-  getRelatedProducts,
-} from "@/lib/data";
+import { getFreeDeliveryThreshold, getProductBySlug, getProducts } from "@/lib/data";
 import { formatRwf } from "@/lib/format";
 import { getDictionary } from "@/lib/i18n/server";
 
@@ -44,12 +39,8 @@ export default async function ProductPage({ params }: { params: Params }) {
   try {
     const product = await getProductBySlug(slug);
     if (!product) notFound();
-    const [categories, related, threshold] = await Promise.all([
-      getCategories(),
-      getRelatedProducts(product),
-      getFreeDeliveryThreshold(),
-    ]);
-    loaded = { product, categories, related, threshold };
+    const [products, threshold] = await Promise.all([getProducts(), getFreeDeliveryThreshold()]);
+    loaded = { product, related: relatedProducts(products, product), threshold };
   } catch (error) {
     unstable_rethrow(error); // let notFound() reach Next
     console.error("[product] failed to load:", error);
@@ -60,8 +51,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     );
   }
 
-  const { product, categories, related, threshold } = loaded;
-  const category = categories.find((c) => c.slug === product.categorySlug);
+  const { product, related, threshold } = loaded;
   const productUrl = `${SITE_URL}/product/${product.slug}`;
 
   // Structured data mirrors only what the page shows: no ratings or reviews
@@ -73,7 +63,6 @@ export default async function ProductPage({ params }: { params: Params }) {
     description: product.description || product.shortDescription,
     image: product.images.map(absoluteUrl),
     sku: product.slug,
-    category: category?.name,
     brand: { "@type": "Brand", name: BUSINESS.name },
     offers: {
       "@type": "Offer",
@@ -90,10 +79,7 @@ export default async function ProductPage({ params }: { params: Params }) {
     "@type": "BreadcrumbList",
     itemListElement: [
       { "@type": "ListItem", position: 1, name: dict.nav.shop, item: `${SITE_URL}/shop` },
-      ...(category
-        ? [{ "@type": "ListItem", position: 2, name: category.name, item: `${SITE_URL}/shop/${category.slug}` }]
-        : []),
-      { "@type": "ListItem", position: category ? 3 : 2, name: product.name, item: productUrl },
+      { "@type": "ListItem", position: 2, name: product.name, item: productUrl },
     ],
   };
 
@@ -111,16 +97,6 @@ export default async function ProductPage({ params }: { params: Params }) {
               {dict.nav.shop}
             </Link>
           </li>
-          {category && (
-            <>
-              <li aria-hidden>/</li>
-              <li>
-                <Link href={`/shop/${category.slug}`} className="transition-colors duration-200 hover:text-copper">
-                  {category.name}
-                </Link>
-              </li>
-            </>
-          )}
           <li aria-hidden>/</li>
           <li aria-current="page" className="line-clamp-1 font-medium text-ink-soft">
             {product.name}

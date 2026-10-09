@@ -1,4 +1,4 @@
-import { BUSINESS, FREE_DELIVERY_THRESHOLD_RWF } from "./constants";
+import { BUSINESS } from "./constants";
 import { formatRwf } from "./format";
 import type { CartItem, Fulfillment } from "./types";
 
@@ -40,13 +40,15 @@ export function buildOrderMessage(input: {
   note: string | null;
   /** Order reference from the database, so the shop can match message to record. */
   reference?: string | null;
+  /** The admin-set threshold, so the message agrees with what checkout showed. */
+  freeDeliveryThreshold: number;
 }): string {
   const subtotal = input.items.reduce(
     (sum, item) => sum + item.priceRwf * item.quantity,
     0,
   );
   const freeDelivery =
-    input.fulfillment === "delivery" && subtotal >= FREE_DELIVERY_THRESHOLD_RWF;
+    input.fulfillment === "delivery" && subtotal >= input.freeDeliveryThreshold;
 
   const lines = [
     input.reference
@@ -64,7 +66,7 @@ export function buildOrderMessage(input: {
   if (input.fulfillment === "pickup") {
     lines.push("Fulfillment: Pickup at City Plaza (free)");
   } else if (freeDelivery) {
-    lines.push(`Delivery: FREE (order over ${formatRwf(FREE_DELIVERY_THRESHOLD_RWF)})`);
+    lines.push(`Delivery: FREE (order over ${formatRwf(input.freeDeliveryThreshold)})`);
     lines.push(`Delivery area: ${input.deliveryArea ?? "—"}`);
   } else {
     lines.push("Delivery: fee to confirm based on location");

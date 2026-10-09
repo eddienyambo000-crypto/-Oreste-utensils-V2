@@ -49,7 +49,7 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-porcelain/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex min-h-11 items-center gap-2.5" aria-label={dict.nav.homeLabel}>
+        <Link href="/" className="flex min-h-11 items-center gap-2.5">
           {logoUrl && (
             <Image
               src={logoUrl}
@@ -62,7 +62,7 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
             />
           )}
           <span className="flex items-baseline gap-1.5 leading-none">
-            <span className="font-display text-xl font-bold tracking-tight text-ink sm:text-2xl">Oreste</span>
+            <span className="font-display text-xl font-bold tracking-tight text-ink sm:text-2xl">Oreste</span>{" "}
             <span className="text-[0.6rem] font-semibold uppercase tracking-[0.2em] text-copper">Utensils</span>
           </span>
         </Link>
@@ -101,7 +101,7 @@ export function Header({ logoUrl }: { logoUrl?: string | null }) {
               <span
                 key={count}
                 aria-hidden
-                className="absolute right-0.5 top-0.5 flex h-5 min-w-5 animate-bump items-center justify-center rounded-full bg-copper px-1 text-[0.65rem] font-bold tabular-nums text-white"
+                className="absolute right-0.5 top-0.5 flex h-5 min-w-5 animate-bump items-center justify-center rounded-full bg-copper px-1 text-[0.65rem] font-bold tabular-nums text-on-copper"
               >
                 {count > 99 ? "99+" : count}
               </span>

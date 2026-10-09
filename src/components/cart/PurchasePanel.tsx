@@ -80,7 +80,7 @@ export function PurchasePanel({ product }: { product: Product }) {
         <button
           type="button"
           onClick={add}
-          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 font-semibold text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+          className="inline-flex min-h-12 flex-1 cursor-pointer items-center justify-center gap-2 rounded-full bg-copper px-6 font-semibold text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
         >
           <IconBag className="h-5 w-5" />
           {dict.common.addToCart}

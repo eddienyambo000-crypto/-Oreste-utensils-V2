@@ -1,11 +1,11 @@
 import { z } from "zod";
 
+// The client says which product and how many. Name is only used to name a
+// line that is no longer available; price, slug and image are ignored and
+// re-read from the database (see lib/orderPricing.ts).
 const cartItemSchema = z.object({
   productId: z.string().min(1).max(120),
-  slug: z.string().min(1).max(160),
   name: z.string().min(1).max(200),
-  priceRwf: z.number().int().nonnegative().max(100_000_000),
-  image: z.string().max(400),
   quantity: z.number().int().min(1).max(99),
 });
 

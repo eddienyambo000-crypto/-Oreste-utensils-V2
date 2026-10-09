@@ -31,6 +31,7 @@ describe("buildOrderMessage", () => {
       fulfillment: "delivery",
       deliveryArea: "Kacyiru",
       note: null,
+      freeDeliveryThreshold: 500_000,
     });
     expect(msg).toContain("Dutch Oven × 1");
     expect(msg).toContain("Wok × 2");
@@ -48,13 +49,14 @@ describe("buildOrderMessage", () => {
       fulfillment: "delivery",
       deliveryArea: "Remera",
       note: "call first",
+      freeDeliveryThreshold: 500_000,
     });
     expect(msg).toContain("Delivery: fee to confirm based on location");
     expect(msg).toContain("Note: call first");
   });
 
   it("leads with the order reference when there is one", () => {
-    const base = { items, customerName: "A", phone: "x", fulfillment: "pickup" as const, deliveryArea: null, note: null };
+    const base = { items, customerName: "A", phone: "x", fulfillment: "pickup" as const, deliveryArea: null, note: null, freeDeliveryThreshold: 500_000 };
     expect(buildOrderMessage({ ...base, reference: "OU-1A2B3C" })).toMatch(/^New order OU-1A2B3C — oresteutensils.com/);
     expect(buildOrderMessage(base)).toMatch(/^New order — oresteutensils.com/);
   });
@@ -67,8 +69,22 @@ describe("buildOrderMessage", () => {
       fulfillment: "pickup",
       deliveryArea: null,
       note: null,
+      freeDeliveryThreshold: 500_000,
     });
     expect(msg).toContain("Pickup at City Plaza (free)");
     expect(msg).not.toContain("Delivery area:");
+  });
+
+  it("follows the admin-set threshold, not a fixed amount", () => {
+    const msg = buildOrderMessage({
+      items: [items[1]], // 240,000
+      customerName: "A",
+      phone: "x",
+      fulfillment: "delivery",
+      deliveryArea: "Remera",
+      note: null,
+      freeDeliveryThreshold: 200_000,
+    });
+    expect(msg).toContain("Delivery: FREE (order over 200,000 RWF)");
   });
 });

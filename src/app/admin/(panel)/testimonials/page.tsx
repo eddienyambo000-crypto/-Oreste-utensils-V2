@@ -18,7 +18,7 @@ export default async function AdminTestimonialsPage() {
         </h1>
         <Link
           href="/admin/testimonials/new"
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-copper px-5 py-2.5 text-sm font-medium text-white shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
+          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-copper px-5 py-2.5 text-sm font-medium text-on-copper shadow-copper transition-[background-color,transform] duration-200 hover:bg-copper-deep active:scale-[0.98]"
         >
           <IconPlus className="h-4 w-4" />
           New testimonial
