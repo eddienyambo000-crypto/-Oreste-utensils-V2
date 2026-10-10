@@ -47,41 +47,57 @@ export function ShopExplorer({ products, initialQuery }: ShopExplorerProps) {
 
   return (
     <div>
-      <div className="flex items-center gap-2.5 sm:gap-3">
-        <label className="relative min-w-0 flex-1 sm:max-w-md">
-          <span className="sr-only">{t.searchLabel}</span>
-          <IconSearch
-            aria-hidden
-            className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
-          />
-          <input
-            type="search"
-            inputMode="search"
-            enterKeyHint="search"
-            autoComplete="off"
-            value={query.q}
-            onChange={(event) => update({ q: event.target.value })}
-            placeholder={t.searchPlaceholder}
-            className="h-12 w-full rounded-full border border-line-strong bg-surface pl-10 pr-11 text-base text-ink placeholder:text-ink-faint [&::-webkit-search-cancel-button]:hidden"
-          />
-          {query.q && (
+      <label className="relative block sm:max-w-md">
+        <span className="sr-only">{t.searchLabel}</span>
+        <IconSearch
+          aria-hidden
+          className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-faint"
+        />
+        <input
+          type="search"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          value={query.q}
+          onChange={(event) => update({ q: event.target.value })}
+          placeholder={t.searchPlaceholder}
+          className="h-12 w-full rounded-full border border-line-strong bg-surface pl-10 pr-11 text-base text-ink placeholder:text-ink-faint [&::-webkit-search-cancel-button]:hidden"
+        />
+        {query.q && (
+          <button
+            type="button"
+            onClick={() => update({ q: "" })}
+            aria-label={t.clearSearch}
+            className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-ink-faint transition-colors duration-200 hover:bg-cream hover:text-ink"
+          >
+            <IconClose className="h-4 w-4" />
+          </button>
+        )}
+      </label>
+
+      {/* Keeps the outline h1 → h2 → product h3 for screen-reader navigation. */}
+      <h2 className="sr-only">{t.resultsHeading}</h2>
+      <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+        <p className="flex min-w-0 items-center gap-3 text-ink-faint" aria-live="polite">
+          <span className="whitespace-nowrap">
+            {visible.length} {visible.length === 1 ? t.countOne : t.countMany}
+          </span>
+          {searching && (
             <button
               type="button"
               onClick={() => update({ q: "" })}
-              aria-label={t.clearSearch}
-              className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full text-ink-faint transition-colors duration-200 hover:bg-cream hover:text-ink"
+              className="hidden min-h-11 cursor-pointer whitespace-nowrap font-semibold text-copper underline-offset-4 hover:underline sm:inline"
             >
-              <IconClose className="h-4 w-4" />
+              {t.clearSearch}
             </button>
           )}
-        </label>
-
-        <label className="flex shrink-0 items-center gap-2 text-sm text-ink-soft">
+        </p>
+        <label className="flex shrink-0 items-center gap-2 text-ink-soft">
           <span className="sr-only sm:not-sr-only">{t.sortLabel}</span>
           <select
             value={query.sort}
             onChange={(event) => update({ sort: event.target.value as SortKey })}
-            className="h-12 max-w-[9.5rem] cursor-pointer rounded-full border border-line-strong bg-surface pl-4 pr-8 text-sm text-ink sm:max-w-none"
+            className="h-11 cursor-pointer rounded-full border border-line-strong bg-surface pl-4 pr-8 text-sm text-ink"
           >
             {SORT_KEYS.map((key) => (
               <option key={key} value={key}>
@@ -90,23 +106,6 @@ export function ShopExplorer({ products, initialQuery }: ShopExplorerProps) {
             ))}
           </select>
         </label>
-      </div>
-
-      {/* Keeps the outline h1 → h2 → product h3 for screen-reader navigation. */}
-      <h2 className="sr-only">{t.resultsHeading}</h2>
-      <div className="mt-4 flex min-h-8 items-center gap-3 text-sm text-ink-faint" aria-live="polite">
-        <span>
-          {visible.length} {visible.length === 1 ? t.countOne : t.countMany}
-        </span>
-        {searching && (
-          <button
-            type="button"
-            onClick={() => update({ q: "" })}
-            className="min-h-8 cursor-pointer font-semibold text-copper underline-offset-4 hover:underline"
-          >
-            {t.clearSearch}
-          </button>
-        )}
       </div>
 
       {visible.length === 0 ? (
