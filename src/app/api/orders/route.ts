@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { getFreeDeliveryThreshold } from "@/lib/data";
+import { notifyOwner } from "@/lib/notify";
 import { priceOrder, type PricedProduct } from "@/lib/orderPricing";
+import { orderReference } from "@/lib/orders";
 import { orderInputSchema } from "@/lib/orderSchema";
 import { seedProducts } from "@/lib/seed";
 import { getServiceClient } from "@/lib/supabase/admin";
@@ -143,6 +145,21 @@ export async function POST(request: Request) {
   if (error) {
     return NextResponse.json({ error: "We couldn't save your order. Please try WhatsApp instead." }, { status: 500 });
   }
+
+  after(() =>
+    notifyOwner({
+      type: "order",
+      reference: orderReference(inserted.id),
+      customerName: data.customerName,
+      phone: data.phone,
+      fulfillment: data.fulfillment,
+      deliveryArea: data.fulfillment === "delivery" ? data.deliveryArea : null,
+      note: data.note,
+      items: items.map(({ name, quantity, priceRwf }) => ({ name, quantity, priceRwf })),
+      subtotalRwf: subtotal,
+      deliveryFree,
+    }),
+  );
 
   return NextResponse.json({ ok: true, id: inserted.id, items, subtotal, threshold });
 }

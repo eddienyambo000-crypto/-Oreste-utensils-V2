@@ -149,6 +149,18 @@ export async function getLogoUrl(): Promise<string | null> {
   return value ? value : null;
 }
 
+/** The official Google review link saved in the admin, or null. */
+export async function getGoogleReviewUrl(): Promise<string | null> {
+  if (!isSupabaseConfigured) return null;
+  const { data } = await getPublicClient()
+    .from("ou_settings")
+    .select("value")
+    .eq("key", "google_review_url")
+    .maybeSingle();
+  const value = data?.value?.trim();
+  return value ? value : null;
+}
+
 const testimonialRowSchema = z.object({
   id: z.string(),
   client_name: z.string(),

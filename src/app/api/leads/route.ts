@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { leadInputSchema } from "@/lib/leadSchema";
+import { notifyOwner } from "@/lib/notify";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { isSupabaseConfigured } from "@/lib/supabase/public";
 import { isMissingTableError } from "@/lib/supabase/errors";
 
 /**
@@ -57,8 +59,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // The owner hears about every enquiry, even if storing it fails below.
+  after(() =>
+    notifyOwner({
+      type: "lead",
+      businessName: data.businessName,
+      contactName: data.contactName,
+      phone: data.phone,
+      businessType: data.businessType,
+      need: data.message,
+    }),
+  );
+
   const supabase = getServiceClient();
   if (!supabase) {
+    if (isSupabaseConfigured) {
+      console.error("[leads] SUPABASE_SERVICE_ROLE_KEY is not set; enquiry not stored.");
+      return NextResponse.json(
+        { error: "We couldn't save your enquiry. Please try WhatsApp instead." },
+        { status: 503 },
+      );
+    }
     return NextResponse.json({ ok: true, mode: "seed" });
   }
 

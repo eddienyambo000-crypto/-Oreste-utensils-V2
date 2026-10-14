@@ -384,6 +384,7 @@ export const rw: Dictionary = {
   reviews: {
     title: "Icyo abakiriya bavuga",
     intro: "Ibitekerezo by'abantu batumije kuri Oreste Utensils.",
+    leaveReview: "Dusigire igitekerezo kuri Google",
     emptyBody: "Nta bitekerezo birashyirwa hano. Hagati aho, uze udusure cyangwa utwandikire.",
   },
   notFound: {

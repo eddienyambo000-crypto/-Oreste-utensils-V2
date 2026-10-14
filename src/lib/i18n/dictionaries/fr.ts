@@ -382,6 +382,7 @@ export const fr: Dictionary = {
   reviews: {
     title: "L'avis de nos clients",
     intro: "Les avis de personnes qui ont commandé chez Oreste Utensils.",
+    leaveReview: "Laisser un avis Google",
     emptyBody: "Aucun avis n'est encore publié ici. En attendant, passez nous voir ou écrivez-nous.",
   },
   notFound: {

@@ -1,6 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
+import { notifyOwner } from "@/lib/notify";
 import { getServiceClient } from "@/lib/supabase/admin";
+import { isSupabaseConfigured } from "@/lib/supabase/public";
 import { isMissingTableError } from "@/lib/supabase/errors";
 
 /**
@@ -59,8 +61,22 @@ export async function POST(request: Request) {
 
   if (data.company) return NextResponse.json({ ok: true });
 
+  // The owner hears about every message, even if storing it fails below.
+  after(() =>
+    notifyOwner({ type: "message", name: data.name, phone: data.phone || null, message: data.message }),
+  );
+
   const supabase = getServiceClient();
-  if (!supabase) return NextResponse.json({ ok: true, mode: "seed" });
+  if (!supabase) {
+    if (isSupabaseConfigured) {
+      console.error("[contact] SUPABASE_SERVICE_ROLE_KEY is not set; message not stored.");
+      return NextResponse.json(
+        { error: "We couldn't send your message. Please try WhatsApp instead." },
+        { status: 503 },
+      );
+    }
+    return NextResponse.json({ ok: true, mode: "seed" });
+  }
 
   const { error } = await supabase.from("ou_messages").insert({
     name: data.name,

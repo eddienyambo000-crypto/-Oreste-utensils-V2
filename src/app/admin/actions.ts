@@ -5,6 +5,7 @@ import { z } from "zod";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
 import { SITE_IMAGE_KEYS } from "@/lib/constants";
 import { CATALOG_TAG } from "@/lib/data";
+import { isGoogleReviewUrl } from "@/lib/reviews";
 import { slugOrFallback, summarize } from "@/lib/slug";
 import { storagePathsIn } from "@/lib/storage";
 import type { LeadStatus, MessageStatus, OrderStatus } from "@/lib/types";
@@ -354,6 +355,23 @@ export async function updateSiteImage(key: string, url: string): Promise<ActionR
     .upsert({ key: parsedKey.data, value: parsedUrl.data });
   if (error) return { ok: false, error: error.message };
   revalidatePath("/", "layout");
+  revalidatePath("/admin/settings");
+  return { ok: true };
+}
+
+/** Sets or clears ("") the Google review link that /review forwards to. */
+export async function updateGoogleReviewUrl(url: string): Promise<ActionResult> {
+  const { supabase, configured } = await requireAdmin();
+  if (!configured || !supabase) return NOT_CONNECTED;
+  const value = typeof url === "string" ? url.trim() : "";
+  if (value !== "" && (value.length > 500 || !isGoogleReviewUrl(value))) {
+    return {
+      ok: false,
+      error: "Paste the review link from Google Business Profile (it starts with https://g.page/ or https://search.google.com/).",
+    };
+  }
+  const { error } = await supabase.from("ou_settings").upsert({ key: "google_review_url", value });
+  if (error) return { ok: false, error: error.message };
   revalidatePath("/admin/settings");
   return { ok: true };
 }

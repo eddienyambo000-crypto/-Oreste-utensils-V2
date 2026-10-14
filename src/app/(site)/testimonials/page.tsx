@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { TestimonialCard } from "@/components/shop/TestimonialCard";
 import { Reveal } from "@/components/ui/Reveal";
-import { IconArrowRight, IconWhatsApp } from "@/components/ui/icons";
+import { IconArrowRight, IconStar, IconWhatsApp } from "@/components/ui/icons";
 import { getTestimonials } from "@/lib/data";
 import { getDictionary } from "@/lib/i18n/server";
 import { whatsappLink } from "@/lib/whatsapp";
@@ -28,6 +28,15 @@ export default async function TestimonialsPage() {
           {dict.reviews.title}
         </h1>
         <p className="mt-4 leading-relaxed text-ink-soft">{dict.reviews.intro}</p>
+        <a
+          href="/review"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-semibold text-ink transition-colors duration-200 hover:border-copper hover:text-copper"
+        >
+          <IconStar aria-hidden className="h-5 w-5 text-copper" />
+          {dict.reviews.leaveReview}
+        </a>
       </header>
 
       {testimonials.length > 0 ? (

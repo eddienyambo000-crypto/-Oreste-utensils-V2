@@ -387,6 +387,7 @@ export const en = {
   reviews: {
     title: "What customers say",
     intro: "Reviews from people who have ordered from Oreste Utensils.",
+    leaveReview: "Leave a Google review",
     emptyBody: "No reviews have been published here yet. In the meantime, come and see us or say hello.",
   },
   notFound: {

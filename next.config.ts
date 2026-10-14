@@ -15,7 +15,9 @@ const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
+  // No Cross-Origin-Opener-Policy: it makes Chrome swap processes on
+  // navigation, which breaks Lighthouse / PageSpeed Insights traces
+  // (NO_NAVSTART), and the site has no cross-window flows it would protect.
   {
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",

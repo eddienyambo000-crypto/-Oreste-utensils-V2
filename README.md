@@ -34,6 +34,7 @@ See `.env.example`.
 | `ADMIN_EMAILS` | Optional. Accounts allowed into `/admin` (defaults to the shop account). |
 | `NEXT_PUBLIC_GA_ID` | Optional. GA4, loaded only after cookie consent. |
 | `GOOGLE_SITE_VERIFICATION` | Optional. Search Console meta tag. |
+| `OWNER_WEBHOOK_URL` · `OWNER_WEBHOOK_SECRET` | Optional. New orders, leads and messages are POSTed (HMAC-signed) here so the owner is alerted, e.g. via n8n → WhatsApp. |
 
 ## Database
 
@@ -54,6 +55,8 @@ Then create the admin user under **Authentication → Users** and turn **off** "
 - **Orders**: the browser sends product ids and quantities only. `/api/orders` re-prices every line from the database (`src/lib/orderPricing.ts`), applies the admin's free-delivery threshold, stores the order and returns the authoritative totals used in the WhatsApp message.
 - **Admin**: `/admin`, installable as "Oreste Admin" (`public/admin.webmanifest`). Camera-first product editor, one-tap stock and homepage toggles, orders with references matching the customer's WhatsApp message.
 - **Access**: `src/proxy.ts` and `requireAdmin()` allow only listed admin accounts; migration 0006 enforces the same in Postgres RLS.
+- **Owner alerts**: `src/lib/notify.ts` posts each new order, trade lead and message to `OWNER_WEBHOOK_URL` after the response is sent (`after()`), so a slow or failing webhook never affects the customer.
+- **Google reviews**: the printed QR points at `/review`, which forwards to the link saved in Admin → Settings (print files in `public/print/`).
 - **Privacy**: no analytics cookies until the visitor accepts; "Cookie settings" in the footer reopens the choice.
 - **Pure rules** live in `src/lib/*.ts` with tests next to them: catalogue, cart, order pricing, slugs, storage paths, WhatsApp messages, admin allowlist, i18n parity.
 

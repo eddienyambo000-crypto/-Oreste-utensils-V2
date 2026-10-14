@@ -1,19 +1,21 @@
 import Link from "next/link";
 import { LogoManager } from "./LogoManager";
+import { ReviewLinkManager } from "./ReviewLinkManager";
 import { SettingsForm } from "./SettingsForm";
 import { SiteImagesManager } from "./SiteImagesManager";
 import { IconArrowRight } from "@/components/ui/icons";
 import { requireAdmin } from "@/lib/supabase/adminGuard";
-import { getFreeDeliveryThreshold, getLogoUrl, getSiteImages } from "@/lib/data";
+import { getFreeDeliveryThreshold, getGoogleReviewUrl, getLogoUrl, getSiteImages } from "@/lib/data";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
-  const [threshold, logoUrl, siteImages] = await Promise.all([
+  const [threshold, logoUrl, siteImages, reviewUrl] = await Promise.all([
     getFreeDeliveryThreshold(),
     getLogoUrl(),
     getSiteImages(),
+    getGoogleReviewUrl(),
   ]);
 
   return (
@@ -39,6 +41,7 @@ export default async function AdminSettingsPage() {
         </Link>
       </section>
 
+      <ReviewLinkManager initialUrl={reviewUrl} />
       <SiteImagesManager images={siteImages} />
       <SettingsForm initialThreshold={threshold} />
     </div>
