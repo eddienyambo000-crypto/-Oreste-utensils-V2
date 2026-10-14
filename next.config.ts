@@ -27,6 +27,11 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   images: {
+    // AVIF first (smaller on slow connections), WebP for older browsers.
+    formats: ["image/avif", "image/webp"],
+    // Uploads get unique, never-reused file names, so optimised copies can be
+    // cached for a month instead of being re-made every few hours.
+    minimumCacheTTL: 60 * 60 * 24 * 31,
     // Allow next/image to serve product photos uploaded to Supabase Storage.
     remotePatterns: [
       {
